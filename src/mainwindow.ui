@@ -26,7 +26,7 @@
     <property name="currentIndex">
      <number>0</number>
     </property>
-    <widget class="QWidget" name="tabFilePreparation" native="true">
+    <widget class="QWidget" name="tabFilePreparation">
      <property name="enabled">
       <bool>true</bool>
      </property>
@@ -36,213 +36,239 @@
      <widget class="QGroupBox" name="groupBox">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>30</y>
-        <width>541</width>
+        <x>30</x>
+        <y>40</y>
+        <width>661</width>
         <height>171</height>
        </rect>
       </property>
       <property name="title">
        <string>Prepare File</string>
       </property>
-      <widget class="QPushButton" name="btnAnaFile">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>120</y>
-         <width>331</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Analyze File</string>
-       </property>
-      </widget>
-      <widget class="QWidget" name="widget" native="true">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>30</y>
-         <width>442</width>
-         <height>72</height>
-        </rect>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Input File:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QPushButton" name="btnInFile">
-          <property name="text">
-           <string>Choose File</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="lblInFilePath">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Input File Path</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLineEdit" name="lblInFileName">
-          <property name="text">
-           <string>Data*</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>.root</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Output File:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QPushButton" name="btnOutFile">
-          <property name="text">
-           <string>Choose Path</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="lblOutFilePath">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Output File Path</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLineEdit" name="lblOutFileName">
-          <property name="text">
-           <string>Data*</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>.root</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-     <widget class="QPushButton" name="btnPrePage">
-      <property name="geometry">
-       <rect>
-        <x>160</x>
-        <y>680</y>
-        <width>91</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Pre Page &lt;</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btnNextPage">
-      <property name="geometry">
-       <rect>
-        <x>460</x>
-        <y>680</y>
-        <width>91</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>&gt; Next Page</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineChoosePage">
-      <property name="geometry">
-       <rect>
-        <x>280</x>
-        <y>680</y>
-        <width>41</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>0</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-     <widget class="QTableWidget" name="tableTree">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>340</y>
-        <width>621</width>
-        <height>321</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>680</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>(50 Entries/Page)</string>
-      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0" colspan="2">
+        <widget class="QWidget" name="widget" native="true">
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Input File:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Output File:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="btnInFile">
+            <property name="text">
+             <string>Choose File</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="7">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>.root</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2" rowspan="2">
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="lblInFilePath">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Input File Path</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="6">
+           <widget class="QLineEdit" name="lblInFileName">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Data*</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="btnOutFile">
+            <property name="text">
+             <string>Choose Path</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="6">
+           <widget class="QLineEdit" name="lblOutFileName">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Data*</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="7">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>.root</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLabel" name="lblOutFilePath">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Output File Path</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4" rowspan="2">
+           <widget class="Line" name="line_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPushButton" name="btnCloseFile">
+         <property name="text">
+          <string>Close File</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="btnOpenFile">
+         <property name="text">
+          <string>Open File</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="Line" name="line_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
      <widget class="QGroupBox" name="groupBox_2">
       <property name="geometry">
        <rect>
-        <x>610</x>
+        <x>730</x>
         <y>40</y>
-        <width>261</width>
-        <height>161</height>
+        <width>191</width>
+        <height>181</height>
        </rect>
       </property>
       <property name="title">
        <string>Tree Info</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_6">
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_16">
          <property name="font">
           <font>
            <bold>true</bold>
           </font>
          </property>
          <property name="text">
-          <string>HG Tree:</string>
+          <string>TDC Tree:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Start ID:</string>
          </property>
         </widget>
        </item>
@@ -250,6 +276,102 @@
         <widget class="QLabel" name="label_8">
          <property name="text">
           <string>Total Entries:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLabel" name="lblLGEntry">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Total Entries:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="7" column="2">
+        <widget class="QLabel" name="lblTDCid">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="3">
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Total Entries:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QLabel" name="lblLGid">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="font">
+          <font>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>LG Tree:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2">
+        <widget class="QLabel" name="lblTDCEntry">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="lblHGid">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -270,100 +392,135 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="lblHGid">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_11">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_6">
          <property name="font">
           <font>
            <bold>true</bold>
           </font>
          </property>
          <property name="text">
-          <string>LG Tree:</string>
+          <string>HG Tree:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QLabel" name="label_12">
-         <property name="text">
-          <string>Total Entries:</string>
+       <item row="5" column="0" colspan="3">
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
-        <widget class="QLabel" name="lblLGEntry">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_15">
-         <property name="text">
-          <string>Start ID:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
-        <widget class="QLabel" name="lblLGid">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_16">
-         <property name="font">
-          <font>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>TDC Tree:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLabel" name="label_17">
-         <property name="text">
-          <string>Total Entries:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2">
-        <widget class="QLabel" name="lblTDCEntry">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
+       <item row="7" column="1">
         <widget class="QLabel" name="label_20">
          <property name="text">
           <string>Start ID:</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="2">
-        <widget class="QLabel" name="lblTDCid">
+       <item row="8" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>240</y>
+        <width>900</width>
+        <height>481</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Table View</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0" colspan="6">
+        <widget class="QTableWidget" name="tableTree">
+         <property name="minimumSize">
+          <size>
+           <width>650</width>
+           <height>0</height>
+          </size>
+         </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="7">
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="4">
+        <widget class="QPushButton" name="btnNextPage">
+         <property name="text">
+          <string>&gt; Next Page</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QTableWidget" name="tableLeaf">
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_5">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>(50 Entries/Page)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="btnPrePage">
+         <property name="text">
+          <string>Pre Page &lt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLineEdit" name="lineChoosePage">
          <property name="text">
           <string>0</string>
          </property>
@@ -372,17 +529,27 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="5">
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="6">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
       </layout>
-     </widget>
-     <widget class="QTableWidget" name="tableLeaf">
-      <property name="geometry">
-       <rect>
-        <x>690</x>
-        <y>340</y>
-        <width>251</width>
-        <height>321</height>
-       </rect>
-      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tabAlignment">
