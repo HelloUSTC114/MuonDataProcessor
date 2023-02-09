@@ -12,10 +12,18 @@ class FileManager;
 
 enum ErrorType
 {
-    Success = 1,
+    Success = 0,
+    // File Manager
     FileNotOpen = -1,
     TreeNotFound = -2,
     FileAlreadyOpen = -3,
+
+    // Align Output file manager
+    EndOfInputFile = -4,
+    InputFileNotOpen = -5,
+
+    // Tree Read Entry
+    AlreadyReadEntry = -6,
 };
 enum TreeType
 {
@@ -48,6 +56,13 @@ public:
 
     Int_t GetEntries(TreeType tree);
 
+    /// @brief Judge whether this entry is out of range
+    /// @param entry
+    /// @param tree
+    /// @return 0 means safe, 1 means out of range
+    bool JudgeEOF(Long64_t entry, TreeType tree);
+    bool JudgeEOF(Long64_t hgentry, Long64_t lgentry, Long64_t tdcentry);
+
 private:
     // Read tree
     TFile *fInFile = NULL;
@@ -60,7 +75,43 @@ private:
     double fLGamp[N_BOARD_CHANNELS];
     uint64_t fTDCTime[N_BOARD_CHANNELS + 1];
     uint32_t fHGid = 0, fLGid = 0, fTDCid = 0;
+    // Read Control
+    int fHGLastReadEntry = -1, fLGLastReadEntry = -1, fTDCLastReadEntry = -1;
 };
 #define gInputFile (InputFileManager::Instance())
+
+double ConvertTDC2Time(uint64_t tdc, double &coarseTime, double &fineTime);
+double ConvertTDC2Time(uint64_t tdc);
+
+class AlignOutputFileManager
+{
+public:
+    static AlignOutputFileManager *Instance();
+
+    bool IsOpen() { return fOpenFlag; };
+    ErrorType OpenFile(std::string sfilename);
+    void CloseFile();
+
+    /// @brief
+    /// @return Number of largest skipped entries. If come across some errors, return error code
+    int AlignOneEntry();
+
+private:
+    volatile bool fOpenFlag = 0;
+    int fAlignedEntries = 0;
+    int fHGCurrentEntry = 0;
+    int fLGCurrentEntry = 0;
+    int fTDCCurrentEntry = 0;
+
+    TFile *fOutFile = NULL;
+    TTree *fOutTree = NULL;
+    uint32_t fTriggerID;
+    UChar_t fFiredCount;
+    uint32_t fFiredChannel[N_BOARD_CHANNELS + 1]; //! fFiredChannel[fFiredCount]
+    double fHGamp[N_BOARD_CHANNELS];
+    double fLGamp[N_BOARD_CHANNELS];
+    double fTDCTime[N_BOARD_CHANNELS + 1];
+};
+#define gAlignOutput (AlignOutputFileManager::Instance())
 
 #endif // ALIGNMANAGER_H

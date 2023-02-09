@@ -53,6 +53,7 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     }
     ui->tableLeaf->verticalHeader()->setVisible(0);
     ui->tableLeaf->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableLeaf->setColumnWidth(1, 150);
 
     // Setting ui
     ui->btnCloseFile->setEnabled(0);
@@ -95,6 +96,10 @@ void Mainwindow::on_btnInFile_clicked()
 
 void Mainwindow::on_btnOutFile_clicked()
 {
+    sInFileName = QFileDialog::getExistingDirectory(this, "Choose output path.", sCurrentPath);
+    QString outputfile = sInFileName + "/" + ui->lblOutFileName->text() + ".root";
+    std::cout << "Output file choosing: " << outputfile.toStdString() << std::endl;
+    gAlignOutput->OpenFile(outputfile.toStdString());
 }
 
 #include <QMessageBox>
@@ -334,7 +339,7 @@ void Mainwindow::showLeaf(int entry, TreeType tree)
         else if (tree == lgTree)
             item = new QTableWidgetItem(QString::number(gInputFile->LGamp()[i]));
         else if (tree == tdcTree)
-            item = new QTableWidgetItem(QString::number(gInputFile->TDCTime()[i]));
+            item = new QTableWidgetItem(QString::number((uint64_t)ConvertTDC2Time(gInputFile->TDCTime()[i])));
 
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui->tableLeaf->setItem(i + 1, 1, item);
@@ -355,4 +360,21 @@ void Mainwindow::on_btnPrePage_clicked()
 void Mainwindow::on_btnNextPage_clicked()
 {
     showPage(fCurrentPage + 1);
+}
+
+void Mainwindow::on_btnAlignOne_clicked()
+{
+    auto rtn = gAlignOutput->AlignOneEntry();
+
+    QString text;
+    if (rtn == FileNotOpen)
+    {
+        text = "Output file not open: " + sInFileName;
+        QMessageBox::information(this, "Error while open file.", text, QMessageBox::Ok, QMessageBox::Cancel);
+    }
+    if (rtn == InputFileNotOpen)
+    {
+        text = "Input file not open: " + sInFileName;
+        QMessageBox::information(this, "Error while open file.", text, QMessageBox::Ok, QMessageBox::Cancel);
+    }
 }
