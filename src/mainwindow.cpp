@@ -98,66 +98,55 @@ void Mainwindow::on_btnOutFile_clicked()
 }
 
 #include <QMessageBox>
+#include "AlignManager.h"
 void Mainwindow::on_btnOpenFile_clicked()
 {
-    if (fInFile && fInFile->IsOpen())
-        return;
-    if (fInFile)
-        if (!fInFile->IsOpen())
-            delete fInFile;
+    // if (fInFile && fInFile->IsOpen())
+    //     return;
+    // if (fInFile)
+    //     if (!fInFile->IsOpen())
+    //         delete fInFile;
+    auto error = gInputFile->OpenFile(sInFileName.toStdString());
 
     // Open file and process exception
-    fInFile = new TFile(sInFileName.toStdString().c_str());
-    if (!fInFile)
-        fInFile = NULL;
-    if (!fInFile->IsOpen())
+    // fInFile = new TFile(sInFileName.toStdString().c_str());
+    // if (!fInFile)
+    //     fInFile = NULL;
+    if (error == FileNotOpen)
     {
         QString text = "Cannot open file: " + sInFileName;
         QMessageBox::information(this, "Error while open file.", text, QMessageBox::Ok, QMessageBox::Cancel);
-        delete fInFile;
-        fInFile = NULL;
         return;
     }
 
-    // Get Trees
-    fHGTree = (TTree *)fInFile->Get("HGTree");
-    fLGTree = (TTree *)fInFile->Get("LGTree");
-    fTDCTree = (TTree *)fInFile->Get("TDCTree");
-    if (!fHGTree || !fLGTree || !fTDCTree)
+    if (error == TreeNotFound)
     {
         QString text = "Cannot find three trees.";
         QMessageBox::information(this, "Error while open file.", text, QMessageBox::Ok, QMessageBox::Cancel);
-        CloseFile();
         return;
     }
     ui->btnOpenFile->setEnabled(0);
     ui->btnInFile->setEnabled(0);
     ui->btnCloseFile->setEnabled(1);
-    fIsOpen = 1;
 
     // Show Tree Information
-    fHGEntries = fHGTree->GetEntries();
-    fLGEntries = fHGTree->GetEntries();
-    fTDCEntries = fTDCTree->GetEntries();
+    fHGEntries = gInputFile->GetEntries(hgTree);
+    fLGEntries = gInputFile->GetEntries(lgTree);
+    fTDCEntries = gInputFile->GetEntries(tdcTree);
     ui->lblHGEntry->setText(QString::number(fHGEntries));
     ui->lblLGEntry->setText(QString::number(fLGEntries));
     ui->lblTDCEntry->setText(QString::number(fTDCEntries));
 
     // Tree setting
-    fHGTree->SetBranchAddress("chHGid", &fHGid);
-    fLGTree->SetBranchAddress("chLGid", &fLGid);
-    fTDCTree->SetBranchAddress("chTDCid", &fTDCid);
-
-    fHGTree->SetBranchAddress("chHG", fHGamp);
-    fLGTree->SetBranchAddress("chLG", fLGamp);
-    fTDCTree->SetBranchAddress("chTDC", fTDCTime);
-
-    fHGTree->GetEntry(0);
-    fLGTree->GetEntry(0);
-    fTDCTree->GetEntry(0);
-    ui->lblHGid->setText(QString::number(fHGid));
-    ui->lblLGid->setText(QString::number(fLGid));
-    ui->lblTDCid->setText(QString::number(fTDCid));
+    gInputFile->GetEntry(0, hgTree);
+    gInputFile->GetEntry(0, lgTree);
+    gInputFile->GetEntry(0, tdcTree);
+    fHGStartid = gInputFile->HGid();
+    fLGStartid = gInputFile->LGid();
+    fTDCStartid = gInputFile->TDCid();
+    ui->lblHGid->setText(QString::number(fHGStartid));
+    ui->lblLGid->setText(QString::number(fLGStartid));
+    ui->lblTDCid->setText(QString::number(fTDCStartid));
 
     // Table:
     showPage(0);
@@ -165,7 +154,7 @@ void Mainwindow::on_btnOpenFile_clicked()
 
 void Mainwindow::showPage(int page)
 {
-    if (!fIsOpen)
+    if (!gInputFile->IsOpen())
         return;
     // if (fCurrentPage == page)
     //     return;
@@ -193,8 +182,8 @@ void Mainwindow::showPage(int page)
         if (fHGEntries > idx)
         {
             HGidx = idx;
-            fHGTree->GetEntry(idx);
-            HGid = fHGid;
+            gInputFile->GetEntry(idx, hgTree);
+            HGid = gInputFile->HGid();
         }
         else
         {
@@ -204,8 +193,8 @@ void Mainwindow::showPage(int page)
         if (fLGEntries > idx)
         {
             LGidx = idx;
-            fLGTree->GetEntry(idx);
-            LGid = fLGid;
+            gInputFile->GetEntry(idx, lgTree);
+            LGid = gInputFile->LGid();
         }
         else
         {
@@ -215,8 +204,11 @@ void Mainwindow::showPage(int page)
         if (fTDCEntries > idx)
         {
             TDCidx = idx;
-            fTDCTree->GetEntry(idx);
-            TDCid = fTDCid;
+            // fTDCTree->GetEntry(idx);
+            // TDCid = fTDCid;
+
+            gInputFile->GetEntry(idx, tdcTree);
+            TDCid = gInputFile->TDCid();
         }
         else
         {
@@ -270,7 +262,7 @@ void Mainwindow::createItemsARow(int rowNo, int hgSerial, int hgID, int lgSerial
 
 void Mainwindow::on_btnCloseFile_clicked()
 {
-    CloseFile();
+    gInputFile->CloseFile();
 
     // setting UI
     ui->btnOpenFile->setEnabled(1);
@@ -280,53 +272,53 @@ void Mainwindow::on_btnCloseFile_clicked()
     ui->lblHGEntry->setText(QString::number(0));
     ui->lblLGEntry->setText(QString::number(0));
     ui->lblTDCEntry->setText(QString::number(0));
-}
 
-void Mainwindow::CloseFile()
-{
-    fIsOpen = 0;
-
-    if (fInFile)
-    {
-        fInFile->Close();
-        delete fInFile;
-    }
-    fInFile = NULL;
-    fHGTree = NULL;
-    fLGTree = NULL;
-    fTDCTree = NULL;
-    ui->tableTree->clearContents();
-    ui->tableLeaf->clearContents();
+    ui->lblHGid->setText(QString::number(0));
+    ui->lblLGid->setText(QString::number(0));
+    ui->lblTDCid->setText(QString::number(0));
 }
 
 void Mainwindow::on_tableTree_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
-    if (!fIsOpen)
+    if (!gInputFile->IsOpen())
         return;
     int entry = currentRow + 50 * fCurrentPage;
-    if (currentColumn / 2 == 0)
-        showHGLeaf(entry);
-    if (currentColumn / 2 == 1)
-        showLGLeaf(entry);
-    if (currentColumn / 2 == 2)
-        showTDCLeaf(entry);
+    showLeaf(entry, (TreeType)(currentColumn / 2));
 }
 
-void Mainwindow::showHGLeaf(int entry)
+void Mainwindow::showLeaf(int entry, TreeType tree)
 {
     ui->tableLeaf->clearContents();
-    ui->tableLeaf->setRowCount(33);
-    fHGTree->GetEntry(entry);
+    if (tree < 2 && tree >= 0)
+        ui->tableLeaf->setRowCount(33);
+    else
+        ui->tableLeaf->setRowCount(34);
+
+    gInputFile->GetEntry(entry, tree);
     QTableWidgetItem *item;
 
-    item = new QTableWidgetItem("HG id:");
+    if (tree == hgTree)
+        item = new QTableWidgetItem("HG id:");
+    else if (tree == lgTree)
+        item = new QTableWidgetItem("LG id:");
+    else if (tree == tdcTree)
+        item = new QTableWidgetItem("TDC id:");
+
     item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     auto font = item->font();
     font.setBold(true);
     item->setFont(font);
     ui->tableLeaf->setItem(0, 0, item);
 
-    item = new QTableWidgetItem(QString::number(fHGid));
+    uint32_t temp;
+    if (tree == hgTree)
+        temp = gInputFile->HGid();
+    else if (tree == lgTree)
+        temp = gInputFile->LGid();
+    else if (tree == tdcTree)
+        temp = gInputFile->TDCid();
+    item = new QTableWidgetItem(QString::number(temp));
+
     item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     item->setFont(font);
     ui->tableLeaf->setItem(0, 1, item);
@@ -337,74 +329,13 @@ void Mainwindow::showHGLeaf(int entry)
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui->tableLeaf->setItem(i + 1, 0, item);
 
-        item = new QTableWidgetItem(QString::number(fHGamp[i]));
-        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        ui->tableLeaf->setItem(i + 1, 1, item);
-    }
-}
+        if (tree == hgTree)
+            item = new QTableWidgetItem(QString::number(gInputFile->HGamp()[i]));
+        else if (tree == lgTree)
+            item = new QTableWidgetItem(QString::number(gInputFile->LGamp()[i]));
+        else if (tree == tdcTree)
+            item = new QTableWidgetItem(QString::number(gInputFile->TDCTime()[i]));
 
-void Mainwindow::showLGLeaf(int entry)
-{
-    ui->tableLeaf->clearContents();
-    ui->tableLeaf->setRowCount(33);
-    fLGTree->GetEntry(entry);
-    QTableWidgetItem *item;
-
-    item = new QTableWidgetItem("LG id:");
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    auto font = item->font();
-    font.setBold(true);
-    item->setFont(font);
-    ui->tableLeaf->setItem(0, 0, item);
-
-    item = new QTableWidgetItem(QString::number(fLGid));
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    item->setFont(font);
-    ui->tableLeaf->setItem(0, 1, item);
-
-    for (int i = 0; i < N_BOARD_CHANNELS; i++)
-    {
-        item = new QTableWidgetItem(QString::number(i));
-        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        ui->tableLeaf->setItem(i + 1, 0, item);
-
-        item = new QTableWidgetItem(QString::number(fLGamp[i]));
-        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        ui->tableLeaf->setItem(i + 1, 1, item);
-    }
-}
-
-void Mainwindow::showTDCLeaf(int entry)
-{
-    ui->tableLeaf->clearContents();
-    ui->tableLeaf->setRowCount(34);
-    fTDCTree->GetEntry(entry);
-    QTableWidgetItem *item;
-
-    item = new QTableWidgetItem("TDC id:");
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    auto font = item->font();
-    font.setBold(true);
-    item->setFont(font);
-    ui->tableLeaf->setItem(0, 0, item);
-
-    item = new QTableWidgetItem(QString::number(fTDCid));
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    item->setFont(font);
-    ui->tableLeaf->setItem(0, 1, item);
-
-    for (int i = 0; i < N_BOARD_CHANNELS + 1; i++)
-    {
-        item = new QTableWidgetItem(QString::number(i));
-        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        ui->tableLeaf->setItem(i + 1, 0, item);
-
-        uint64_t tdc = fTDCTime[i];
-
-        double fgFreq = 433.995; // in unit of MHz, board TDC frequency
-        double coarseTime = (tdc >> 16) / fgFreq * 1e3;
-        double fineTime = (tdc & 0xffff) / 65536.0 / fgFreq * 1e3;
-        item = new QTableWidgetItem(QString::number(fineTime - coarseTime));
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui->tableLeaf->setItem(i + 1, 1, item);
     }

@@ -11,7 +11,9 @@
 // ROOT
 #include <TFile.h>
 #include <TTree.h>
-#define N_BOARD_CHANNELS 32
+
+// User
+#include "AlignManager.h"
 
 namespace Ui
 {
@@ -50,22 +52,14 @@ private:
     QString sInFileName, sOutFileName;
     QString sCurrentPath = "./";
 
-    // Read tree
-    TFile *fInFile = NULL;
-    TTree *fHGTree = NULL, *fLGTree = NULL, *fTDCTree = NULL;
+    // // Read tree
     int fHGEntries = 0, fLGEntries = 0, fTDCEntries = 0;
     int fHGStartid = 0, fLGStartid = 0, fTDCStartid = 0;
-    void CloseFile();
-    bool fIsOpen = 0;
-    // tree setting
-    double fHGamp[N_BOARD_CHANNELS];
-    double fLGamp[N_BOARD_CHANNELS];
-    uint64_t fTDCTime[N_BOARD_CHANNELS + 1];
-    uint32_t fHGid = 0, fLGid = 0, fTDCid = 0;
 
     // Table setting
     uint64_t fCurrentPage = 0;
     void showPage(int page);
+    void showLeaf(int entry, TreeType tree);
     void showHGLeaf(int entry);
     void showLGLeaf(int entry);
     void showTDCLeaf(int entry);
