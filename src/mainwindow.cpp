@@ -591,6 +591,46 @@ QString ProcessOutputName(QString sInput)
 
 void Mainwindow::on_btnStartBatch_clicked()
 {
+    // std::cout << sInFileList.at(0).toStdString() << '\t' << sOutFileList.at(0).toStdString() << std::endl;
+    emit startAlignRequest(sInFileList.at(0), sOutFileList.at(0));
+    ui->btnGenerateFileList->setEnabled(0);
+}
+
+void Mainwindow::handle_AlignDone(QString sInput, int alignedEntry)
+{
+    int handle = sInFileList.indexOf(sInput);
+    auto item = new QTableWidgetItem(QString::number(alignedEntry));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableBatchAlign->setItem(handle, 5, item);
+    gInputFile->CloseFile();
+    gAlignOutput->CloseFile();
+
+    if (handle >= 0 && handle < sInFileList.size() - 1)
+        emit startAlignRequest(sInFileList.at(handle + 1), sOutFileList.at(handle + 1));
+    else
+    {
+        ui->tabFilePreparation->setEnabled(1);
+        ui->btnGenerateFileList->setEnabled(1);
+    }
+}
+void Mainwindow::handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int tdcEntry)
+{
+    int handle = sInFileList.indexOf(sInput);
+    auto item = new QTableWidgetItem(QString::number(hgEntry));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableBatchAlign->setItem(handle, 1, item);
+
+    item = new QTableWidgetItem(QString::number(lgEntry));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableBatchAlign->setItem(handle, 2, item);
+
+    item = new QTableWidgetItem(QString::number(tdcEntry));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableBatchAlign->setItem(handle, 3, item);
+}
+
+void Mainwindow::on_btnGenerateFileList_clicked()
+{
     // Verify path
     if (sBatchInPath == "" || sBatchOutPath == "")
         return;
@@ -643,39 +683,4 @@ void Mainwindow::on_btnStartBatch_clicked()
         sOutFileList.push_back(sBatchOutPath + "/" + outFileName);
         // std::cout << ProcessOutputName(filename).toStdString() << std::endl;
     }
-    std::cout << sInFileList.at(0).toStdString() << '\t' << sOutFileList.at(0).toStdString() << std::endl;
-    emit startAlignRequest(sInFileList.at(0), sOutFileList.at(0));
-    // fAlignWorker->startAlign(sInFileList.at(0), sOutFileList.at(0));
-}
-
-void Mainwindow::handle_AlignDone(QString sInput, int alignedEntry)
-{
-    int handle = sInFileList.indexOf(sInput);
-    auto item = new QTableWidgetItem(QString::number(alignedEntry));
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    ui->tableBatchAlign->setItem(handle, 5, item);
-    gInputFile->CloseFile();
-    gAlignOutput->CloseFile();
-
-    if (handle >= 0 && handle < sInFileList.size() - 1)
-        emit startAlignRequest(sInFileList.at(handle + 1), sOutFileList.at(handle + 1));
-    else
-    {
-        ui->tabFilePreparation->setEnabled(1);
-    }
-}
-void Mainwindow::handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int tdcEntry)
-{
-    int handle = sInFileList.indexOf(sInput);
-    auto item = new QTableWidgetItem(QString::number(hgEntry));
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    ui->tableBatchAlign->setItem(handle, 1, item);
-
-    item = new QTableWidgetItem(QString::number(lgEntry));
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    ui->tableBatchAlign->setItem(handle, 2, item);
-
-    item = new QTableWidgetItem(QString::number(tdcEntry));
-    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    ui->tableBatchAlign->setItem(handle, 3, item);
 }

@@ -578,7 +578,7 @@
        <rect>
         <x>30</x>
         <y>40</y>
-        <width>601</width>
+        <width>891</width>
         <height>106</height>
        </rect>
       </property>
@@ -589,27 +589,6 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_10">
-         <property name="text">
-          <string>Output Path:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="btnBatchOutPath">
-         <property name="text">
-          <string>Choose Path</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Input Path:</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QPushButton" name="btnBatchInPath">
          <property name="text">
@@ -617,22 +596,16 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QLineEdit" name="lineBatchOutPath">
-         <property name="minimumSize">
-          <size>
-           <width>150</width>
-           <height>0</height>
-          </size>
+       <item row="0" column="3" rowspan="2">
+        <widget class="QPushButton" name="btnGenerateFileList">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
          <property name="text">
-          <string>C:\Users\liang\Desktop\DetectorData\Alinged-Logic3</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>false</bool>
+          <string>Generate List</string>
          </property>
         </widget>
        </item>
@@ -655,7 +628,47 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="3" rowspan="2">
+       <item row="1" column="1">
+        <widget class="QPushButton" name="btnBatchOutPath">
+         <property name="text">
+          <string>Choose Path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Input Path:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLineEdit" name="lineBatchOutPath">
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>C:\Users\liang\Desktop\DetectorData\Alinged-Logic3</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Output Path:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5" rowspan="2">
         <widget class="QPushButton" name="btnStartBatch">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -665,6 +678,13 @@
          </property>
          <property name="text">
           <string>Start Align</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4" rowspan="2">
+        <widget class="Line" name="line_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
         </widget>
        </item>

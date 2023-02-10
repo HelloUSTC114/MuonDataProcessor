@@ -241,6 +241,18 @@ int AlignOutputFileManager::AlignOneEntry(bool verbose)
         auto hgid = gInputFile->HGid();
         auto lgid = gInputFile->LGid();
         auto tdcid = gInputFile->TDCid();
+        if ((int32_t)(hgid) == -1)
+        {
+            hgid = 0;
+        }
+        if ((int32_t)(lgid) == -1)
+        {
+            lgid = 0;
+        }
+        if ((int32_t)(tdcid) == -1)
+        {
+            tdcid = 0;
+        }
 
         auto maxid = TMath::Max(TMath::Max(hgid, lgid), tdcid);
         bool idEqual = (hgid == maxid) && (lgid == maxid) && (tdcid == maxid);

@@ -80,6 +80,8 @@ private slots:
     void handle_AlignDone(QString sInput, int alignedEntry);
     void handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int tdcEntry);
 
+    void on_btnGenerateFileList_clicked();
+
 signals:
     void startAlignRequest(QString sInput, QString sOutput);
 
