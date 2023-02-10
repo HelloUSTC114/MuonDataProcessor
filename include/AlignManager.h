@@ -95,7 +95,7 @@ public:
     /// @brief
     /// @return Number of largest skipped entries. If come across some errors, return error code
     int AlignOneEntry(bool verbose = 0);
-    int BatchAlign();
+    int AlignAllEntries();
 
 private:
     volatile bool fOpenFlag = 0;

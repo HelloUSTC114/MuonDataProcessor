@@ -289,7 +289,7 @@ int AlignOutputFileManager::AlignOneEntry(bool verbose)
     return loopCounter;
 }
 
-int AlignOutputFileManager::BatchAlign()
+int AlignOutputFileManager::AlignAllEntries()
 {
     int entries = 0;
     for (entries = 0; AlignOneEntry() >= 0; entries++)
