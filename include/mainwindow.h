@@ -47,6 +47,12 @@ private slots:
 
     void on_btnAlignOne_clicked();
 
+    void on_btnOpenOutputFile_clicked();
+
+    void on_btnCloseOutputFile_clicked();
+
+    void on_btnBatchAlign_clicked();
+
 private:
     Ui::Mainwindow *ui;
 

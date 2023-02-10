@@ -57,6 +57,7 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
 
     // Setting ui
     ui->btnCloseFile->setEnabled(0);
+    ui->btnCloseOutputFile->setEnabled(0);
 }
 
 Mainwindow::~Mainwindow()
@@ -94,12 +95,13 @@ void Mainwindow::on_btnInFile_clicked()
     ui->lblInFileName->setText(sfileName1);
 }
 
+#include <QDateTime>
 void Mainwindow::on_btnOutFile_clicked()
 {
-    sInFileName = QFileDialog::getExistingDirectory(this, "Choose output path.", sCurrentPath);
-    QString outputfile = sInFileName + "/" + ui->lblOutFileName->text() + ".root";
-    std::cout << "Output file choosing: " << outputfile.toStdString() << std::endl;
-    gAlignOutput->OpenFile(outputfile.toStdString());
+    sOutFileName = QFileDialog::getExistingDirectory(this, "Choose output path.", sCurrentPath);
+    ui->lblOutFilePath->setText(sOutFileName);
+    sOutFileName = sOutFileName + "/" + ui->lblOutFileName->text() + QDateTime::currentDateTime().toString("-yyyy-MM-dd-hh-mm-ss") + ".root";
+    std::cout << "Output file choosing: " << sOutFileName.toStdString() << std::endl;
 }
 
 #include <QMessageBox>
@@ -377,4 +379,49 @@ void Mainwindow::on_btnAlignOne_clicked()
         text = "Input file not open: " + sInFileName;
         QMessageBox::information(this, "Error while open file.", text, QMessageBox::Ok, QMessageBox::Cancel);
     }
+    if (rtn == EndOfInputFile)
+    {
+        text = "End of file: " + sInFileName;
+        QMessageBox::information(this, "Read until the end of file.", text, QMessageBox::Ok, QMessageBox::Cancel);
+    }
+}
+
+void Mainwindow::on_btnOpenOutputFile_clicked()
+{
+    // if (fInFile && fInFile->IsOpen())
+    //     return;
+    // if (fInFile)
+    //     if (!fInFile->IsOpen())
+    //         delete fInFile;
+
+    auto error = gAlignOutput->OpenFile(sOutFileName.toStdString());
+
+    // Open file and process exception
+    if (error == FileAlreadyOpen)
+        return;
+    if (error == FileNotOpen)
+    {
+        QString text = "Cannot open file: " + sInFileName;
+        QMessageBox::information(this, "Error while open file.", text, QMessageBox::Ok, QMessageBox::Cancel);
+        return;
+    }
+
+    ui->btnOpenOutputFile->setEnabled(0);
+    ui->btnOutFile->setEnabled(0);
+    ui->btnCloseOutputFile->setEnabled(1);
+}
+
+void Mainwindow::on_btnCloseOutputFile_clicked()
+{
+    gAlignOutput->CloseFile();
+
+    // setting UI
+    ui->btnOpenOutputFile->setEnabled(1);
+    ui->btnOutFile->setEnabled(1);
+    ui->btnCloseOutputFile->setEnabled(0);
+}
+
+void Mainwindow::on_btnBatchAlign_clicked()
+{
+    gAlignOutput->BatchAlign();
 }

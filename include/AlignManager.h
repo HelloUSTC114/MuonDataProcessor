@@ -54,7 +54,7 @@ public:
     /// @return -1 if failed
     Int_t GetEntry(Long64_t entry, TreeType tree);
 
-    Int_t GetEntries(TreeType tree);
+    Long64_t GetEntries(TreeType tree);
 
     /// @brief Judge whether this entry is out of range
     /// @param entry
@@ -67,7 +67,7 @@ private:
     // Read tree
     TFile *fInFile = NULL;
     TTree *fHGTree = NULL, *fLGTree = NULL, *fTDCTree = NULL;
-    int fHGEntries = 0, fLGEntries = 0, fTDCEntries = 0;
+    Long64_t fHGEntries = 0, fLGEntries = 0, fTDCEntries = 0;
     int fHGStartid = 0, fLGStartid = 0, fTDCStartid = 0;
     volatile bool fIsOpen = 0;
     // tree setting
@@ -76,7 +76,7 @@ private:
     uint64_t fTDCTime[N_BOARD_CHANNELS + 1];
     uint32_t fHGid = 0, fLGid = 0, fTDCid = 0;
     // Read Control
-    int fHGLastReadEntry = -1, fLGLastReadEntry = -1, fTDCLastReadEntry = -1;
+    Long64_t fHGLastReadEntry = -1, fLGLastReadEntry = -1, fTDCLastReadEntry = -1;
 };
 #define gInputFile (InputFileManager::Instance())
 
@@ -94,7 +94,8 @@ public:
 
     /// @brief
     /// @return Number of largest skipped entries. If come across some errors, return error code
-    int AlignOneEntry();
+    int AlignOneEntry(bool verbose = 0);
+    int BatchAlign();
 
 private:
     volatile bool fOpenFlag = 0;
@@ -107,7 +108,7 @@ private:
     TTree *fOutTree = NULL;
     uint32_t fTriggerID;
     UChar_t fFiredCount;
-    uint32_t fFiredChannel[N_BOARD_CHANNELS + 1]; //! fFiredChannel[fFiredCount]
+    UChar_t fFiredChannel[N_BOARD_CHANNELS + 1]; //! fFiredChannel[fFiredCount]
     double fHGamp[N_BOARD_CHANNELS];
     double fLGamp[N_BOARD_CHANNELS];
     double fTDCTime[N_BOARD_CHANNELS + 1];

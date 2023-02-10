@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1976</width>
-    <height>1026</height>
+    <width>984</width>
+    <height>832</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>0</x>
       <y>10</y>
-      <width>1051</width>
-      <height>831</height>
+      <width>961</width>
+      <height>771</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -31,19 +31,19 @@
       <bool>true</bool>
      </property>
      <attribute name="title">
-      <string>File</string>
+      <string>Align Inside Board</string>
      </attribute>
      <widget class="QGroupBox" name="groupBox">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>30</y>
-        <width>400</width>
+        <x>0</x>
+        <y>10</y>
+        <width>380</width>
         <height>170</height>
        </rect>
       </property>
       <property name="title">
-       <string>Prepare File</string>
+       <string>Input File</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
@@ -141,10 +141,10 @@
      <widget class="QGroupBox" name="groupBox_2">
       <property name="geometry">
        <rect>
-        <x>520</x>
-        <y>40</y>
-        <width>191</width>
-        <height>181</height>
+        <x>760</x>
+        <y>10</y>
+        <width>180</width>
+        <height>170</height>
        </rect>
       </property>
       <property name="title">
@@ -334,9 +334,9 @@
      <widget class="QGroupBox" name="groupBox_3">
       <property name="geometry">
        <rect>
-        <x>30</x>
+        <x>10</x>
         <y>240</y>
-        <width>900</width>
+        <width>931</width>
         <height>481</height>
        </rect>
       </property>
@@ -449,29 +449,11 @@
        </item>
       </layout>
      </widget>
-    </widget>
-    <widget class="QWidget" name="tabAlignment">
-     <attribute name="title">
-      <string>Alignment</string>
-     </attribute>
-     <widget class="QCheckBox" name="boxVisualize">
-      <property name="geometry">
-       <rect>
-        <x>110</x>
-        <y>260</y>
-        <width>161</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Visualize Alignment</string>
-      </property>
-     </widget>
      <widget class="QPushButton" name="btnAlignOne">
       <property name="geometry">
        <rect>
-        <x>470</x>
-        <y>130</y>
+        <x>10</x>
+        <y>190</y>
         <width>181</width>
         <height>24</height>
        </rect>
@@ -483,14 +465,14 @@
      <widget class="QGroupBox" name="groupBox_4">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>30</y>
-        <width>400</width>
+        <x>380</x>
+        <y>10</y>
+        <width>380</width>
         <height>170</height>
        </rect>
       </property>
       <property name="title">
-       <string>Alignment Output</string>
+       <string>OutputFile</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="2">
@@ -585,6 +567,37 @@
        </item>
       </layout>
      </widget>
+     <widget class="QPushButton" name="btnBatchAlign">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>190</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Batch Align</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabAlignment">
+     <attribute name="title">
+      <string>Alignment</string>
+     </attribute>
+     <widget class="QCheckBox" name="boxVisualize">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>260</y>
+        <width>161</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Visualize Alignment</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>
@@ -593,7 +606,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1976</width>
+     <width>984</width>
      <height>22</height>
     </rect>
    </property>

@@ -101,7 +101,7 @@ Int_t InputFileManager::GetEntry(Long64_t entry, TreeType tree)
     return -1;
 }
 
-Int_t InputFileManager::GetEntries(TreeType tree)
+Long64_t InputFileManager::GetEntries(TreeType tree)
 {
     if (!IsOpen())
         return -1;
@@ -214,7 +214,7 @@ void AlignOutputFileManager::CloseFile()
 
 #include <vector>
 #include <iostream>
-int AlignOutputFileManager::AlignOneEntry()
+int AlignOutputFileManager::AlignOneEntry(bool verbose)
 {
     if (!IsOpen())
     {
@@ -246,7 +246,8 @@ int AlignOutputFileManager::AlignOneEntry()
         bool idEqual = (hgid == maxid) && (lgid == maxid) && (tdcid == maxid);
         if (!idEqual)
         {
-            std::cout << "Finding: " << hgid << '\t' << lgid << '\t' << tdcid << '\t' << maxid << std::endl;
+            if (verbose)
+                std::cout << "Finding: " << hgid << '\t' << lgid << '\t' << tdcid << '\t' << maxid << std::endl;
             if (hgid < maxid)
                 fHGCurrentEntry++;
             if (lgid < maxid)
@@ -255,7 +256,8 @@ int AlignOutputFileManager::AlignOneEntry()
                 fTDCCurrentEntry++;
             continue;
         }
-        std::cout << "success: " << hgid << '\t' << lgid << '\t' << tdcid << '\t' << maxid << std::endl;
+        if (verbose)
+            std::cout << "success: " << hgid << '\t' << lgid << '\t' << tdcid << '\t' << maxid << std::endl;
         fTriggerID = maxid;
         alignFlag = 1;
     }
@@ -269,12 +271,29 @@ int AlignOutputFileManager::AlignOneEntry()
         if (fTDCTime[i] != 0)
         {
             fFiredChannel[fFiredCount++] = i;
-            std::cout << i << '\t' << (uint64_t)fTDCTime[i] << std::endl;
+            if (verbose)
+                std::cout << i << '\t' << (uint64_t)fTDCTime[i] << std::endl;
         }
     }
     fOutTree->Fill();
-    std::cout << "Totally fired channel: " << (int)fFiredCount << std::endl;
+    if (verbose)
+    {
+        std::cout << "Totally fired channel: " << (int)fFiredCount << std::endl;
+        for (int i = 0; i < fFiredCount; i++)
+        {
+            std::cout << "Channel: " << (int)fFiredChannel[i] << std::endl;
+        }
+    }
 
     fHGCurrentEntry++, fLGCurrentEntry++, fTDCCurrentEntry++;
-    return loopCounter + 1;
+    return loopCounter;
+}
+
+int AlignOutputFileManager::BatchAlign()
+{
+    int entries = 0;
+    for (entries = 0; AlignOneEntry() >= 0; entries++)
+        ;
+    std::cout << "Totally aligned " << entries << " entries" << std::endl;
+    return entries;
 }
