@@ -163,11 +163,8 @@ void Mainwindow::on_btnOutFile_clicked()
 {
     if (sOutCurrentPath == "")
         sOutCurrentPath = sCurrentPath;
-    sOutFileName = QFileDialog::getExistingDirectory(this, "Choose output path.", sOutCurrentPath);
-    ui->lblOutFilePath->setText(sOutFileName);
-    sOutCurrentPath = sOutFileName;
-    sOutFileName = sOutFileName + "/" + ui->lblOutFileName->text() + QDateTime::currentDateTime().toString("-yyyy-MM-dd-hh-mm-ss") + ".root";
-    std::cout << "Output file choosing: " << sOutFileName.toStdString() << std::endl;
+    sOutCurrentPath = QFileDialog::getExistingDirectory(this, "Choose output path.", sOutCurrentPath);
+    ui->lblOutFilePath->setText(sOutCurrentPath);
 }
 
 #include <QMessageBox>
@@ -179,6 +176,9 @@ void Mainwindow::on_btnOpenFile_clicked()
     // if (fInFile)
     //     if (!fInFile->IsOpen())
     //         delete fInFile;
+    sOutFileName = sOutCurrentPath + "/" + ui->lblOutFileName->text() + QDateTime::currentDateTime().toString("-yyyy-MM-dd-hh-mm-ss") + ".root";
+    std::cout << "Output file choosing: " << sOutFileName.toStdString() << std::endl;
+
     auto error = gInputFile->OpenFile(sInFileName.toStdString());
 
     // Open file and process exception
@@ -583,17 +583,30 @@ QString ProcessOutputName(QString sInput)
     }
     else
     {
-        sOutPre = filename;
+        sOutPre = filename + "-";
     }
-    auto sOutName = sOutPre + "Aligned-" + QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") + ".root";
+    auto sOutName = sOutPre + "Aligned";
+    //  + QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") + ".root";
     return sOutName;
 }
 
 void Mainwindow::on_btnStartBatch_clicked()
 {
     // std::cout << sInFileList.at(0).toStdString() << '\t' << sOutFileList.at(0).toStdString() << std::endl;
+    // Add TimeStamp before start align, update ui table
+    if (ui->ckbTimeStamp->isChecked())
+        sOutFileList[0] = sOutFileList[0] + QDateTime::currentDateTime().toString("-yyyy-MM-dd-hh-mm-ss-zzz") + ".root";
+    else
+        sOutFileList[0] = sOutFileList[0] + ".root";
+
+    auto list = sOutFileList[0].split('/');
+    ui->tableBatchAlign->item(0, 4)->setText(list.at(list.size() - 1));
     emit startAlignRequest(sInFileList.at(0), sOutFileList.at(0));
+
+    // Disable UI
+    ui->tabFilePreparation->setEnabled(0);
     ui->btnGenerateFileList->setEnabled(0);
+    ui->btnStartBatch->setEnabled(0);
 }
 
 void Mainwindow::handle_AlignDone(QString sInput, int alignedEntry)
@@ -606,11 +619,22 @@ void Mainwindow::handle_AlignDone(QString sInput, int alignedEntry)
     gAlignOutput->CloseFile();
 
     if (handle >= 0 && handle < sInFileList.size() - 1)
+    {
+        // Add TimeStamp before start align, update ui table
+        if (ui->ckbTimeStamp->isChecked())
+            sOutFileList[handle + 1] = sOutFileList[handle + 1] + QDateTime::currentDateTime().toString("-yyyy-MM-dd-hh-mm-ss-zzz") + ".root";
+        else
+            sOutFileList[handle + 1] = sOutFileList[handle + 1] + ".root";
+        auto list = sOutFileList[handle + 1].split('/');
+        ui->tableBatchAlign->item(handle + 1, 4)->setText(list.at(list.size() - 1));
         emit startAlignRequest(sInFileList.at(handle + 1), sOutFileList.at(handle + 1));
+    }
     else
     {
+        // Enable UI
         ui->tabFilePreparation->setEnabled(1);
         ui->btnGenerateFileList->setEnabled(1);
+        ui->btnStartBatch->setEnabled(1);
     }
 }
 void Mainwindow::handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int tdcEntry)
@@ -659,7 +683,6 @@ void Mainwindow::on_btnGenerateFileList_clicked()
     // Close all file in test align mode
     on_btnCloseFile_clicked();
     on_btnCloseOutputFile_clicked();
-    ui->tabFilePreparation->setEnabled(0);
 
     QTableWidgetItem *item;
     ui->tableBatchAlign->clearContents();
@@ -674,7 +697,11 @@ void Mainwindow::on_btnGenerateFileList_clicked()
         // std::cout << sInFileList.at(i).toStdString() << std::endl;
 
         auto outFileName = ProcessOutputName(filename);
-        item = new QTableWidgetItem(outFileName);
+        if (ui->ckbTimeStamp->isChecked())
+            item = new QTableWidgetItem(outFileName + "-(Time Stamp).root");
+        else
+            item = new QTableWidgetItem(outFileName + ".root");
+
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui->tableBatchAlign->setItem(i, 4, item);
 

@@ -38,7 +38,7 @@ ErrorType InputFileManager::OpenFile(std::string sfilename)
 
     // Show Tree Information
     fHGEntries = fHGTree->GetEntries();
-    fLGEntries = fHGTree->GetEntries();
+    fLGEntries = fLGTree->GetEntries();
     fTDCEntries = fTDCTree->GetEntries();
 
     // Tree setting

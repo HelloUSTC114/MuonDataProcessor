@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tabFilePreparation">
      <property name="enabled">
@@ -698,6 +698,22 @@
         <width>921</width>
         <height>391</height>
        </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="ckbTimeStamp">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>180</y>
+        <width>271</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Add Time Stamp for Output File</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>
