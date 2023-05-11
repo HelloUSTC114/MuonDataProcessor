@@ -301,11 +301,13 @@ int AlignOutputFileManager::AlignOneEntry(bool verbose)
     return loopCounter;
 }
 
+#include "mainwindow.h"
 int AlignOutputFileManager::AlignAllEntries()
 {
     int entries = 0;
     for (entries = 0; AlignOneEntry() >= 0; entries++)
         ;
     std::cout << "Totally aligned " << entries << " entries" << std::endl;
+    gAlignWin->DisplayAlignedEntries(entries);
     return entries;
 }

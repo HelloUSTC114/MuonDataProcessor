@@ -34,13 +34,16 @@ private:
     QString fsFileName;
 };
 
+#define gAlignWin (Mainwindow::Instance())
 class Mainwindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit Mainwindow(QWidget *parent = nullptr);
     ~Mainwindow();
+
+    static Mainwindow *Instance();
+    void DisplayAlignedEntries(int entries);
 
 private slots:
     void on_btnInFile_clicked();
@@ -87,6 +90,8 @@ signals:
 
 private:
     Ui::Mainwindow *ui;
+
+    explicit Mainwindow(QWidget *parent = nullptr);
 
     // File string
     QString sInFileName, sOutFileName;

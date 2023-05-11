@@ -20,8 +20,9 @@ int main(int argc, char *argv[])
     QApplication qapp(argc, argv);
     new TApplication("QTCanvas Demo", &argc, argv);
 
-    auto win = new Mainwindow();
-    win->show();
+    // auto win = new Mainwindow();
+    // win->show();
+    gAlignWin->show();
     return qapp.exec();
 
     return 1;

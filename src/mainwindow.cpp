@@ -128,6 +128,17 @@ Mainwindow::~Mainwindow()
     delete ui;
 }
 
+void Mainwindow::DisplayAlignedEntries(int entries)
+{
+    ui->lineAlignedEntries->setText(QString::number(entries));
+}
+
+Mainwindow *Mainwindow::Instance()
+{
+    static Mainwindow *instance = new Mainwindow(nullptr);
+    return instance;
+}
+
 #include <QFileDialog>
 #include <iostream>
 void Mainwindow::on_btnInFile_clicked()
@@ -352,6 +363,8 @@ void Mainwindow::on_btnCloseFile_clicked()
     ui->lblHGEntry->setText(QString::number(0));
     ui->lblLGEntry->setText(QString::number(0));
     ui->lblTDCEntry->setText(QString::number(0));
+
+    ui->lineAlignedEntries->setText("");
 
     ui->lblHGid->setText(QString::number(0));
     ui->lblLGid->setText(QString::number(0));

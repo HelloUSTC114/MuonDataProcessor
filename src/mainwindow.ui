@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>997</width>
+    <width>1203</width>
     <height>954</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tabFilePreparation">
      <property name="enabled">
@@ -379,12 +379,47 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
+       <item row="0" column="2" rowspan="2">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
           <string>Tree Info</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
+          <item row="2" column="0" colspan="3">
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Start ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Total Entries:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Aligned:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Start ID:</string>
+            </property>
+           </widget>
+          </item>
           <item row="6" column="0">
            <widget class="QLabel" name="label_16">
             <property name="font">
@@ -397,76 +432,15 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Start ID:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Total Entries:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QLabel" name="lblLGEntry">
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>Total Entries:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <spacer name="horizontalSpacer_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="7" column="2">
-           <widget class="QLabel" name="lblTDCid">
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="3">
-           <widget class="Line" name="line_2">
+          <item row="5" column="0" colspan="3">
+           <widget class="Line" name="line_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="label_17">
-            <property name="text">
-             <string>Total Entries:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="2">
-           <widget class="QLabel" name="lblLGid">
+          <item row="0" column="2">
+           <widget class="QLabel" name="lblHGEntry">
             <property name="text">
              <string>0</string>
             </property>
@@ -487,38 +461,15 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="2">
-           <widget class="QLabel" name="lblTDCEntry">
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_12">
             <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <string>Total Entries:</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="lblHGid">
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="lblHGEntry">
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="label_9">
+          <item row="4" column="1">
+           <widget class="QLabel" name="label_15">
             <property name="text">
              <string>Start ID:</string>
             </property>
@@ -536,32 +487,69 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0" colspan="3">
-           <widget class="Line" name="line_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLabel" name="label_20">
+          <item row="7" column="2">
+           <widget class="QLabel" name="lblTDCid">
             <property name="text">
-             <string>Start ID:</string>
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
-           <spacer name="verticalSpacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
+          <item row="6" column="2">
+           <widget class="QLabel" name="lblTDCEntry">
+            <property name="text">
+             <string>0</string>
             </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
-           </spacer>
+           </widget>
+          </item>
+          <item row="8" column="1" colspan="2">
+           <widget class="QLineEdit" name="lineAlignedEntries">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="lblHGid">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="lblLGid">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Total Entries:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="lblLGEntry">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -718,13 +706,26 @@
      </widget>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="groupBox_5">
+    <property name="geometry">
+     <rect>
+      <x>970</x>
+      <y>50</y>
+      <width>181</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Alignment Message</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>997</width>
+     <width>1203</width>
      <height>22</height>
     </rect>
    </property>
