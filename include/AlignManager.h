@@ -63,6 +63,9 @@ public:
     bool JudgeEOF(Long64_t entry, TreeType tree);
     bool JudgeEOF(Long64_t hgentry, Long64_t lgentry, Long64_t tdcentry);
 
+    // Get arbitrary object from input file
+    TObject *Get(const char *namecycle);
+
 private:
     // Read tree
     TFile *fInFile = NULL;

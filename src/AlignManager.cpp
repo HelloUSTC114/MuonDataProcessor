@@ -132,6 +132,13 @@ bool InputFileManager::JudgeEOF(Long64_t hgentry, Long64_t lgentry, Long64_t tdc
     return eofFlag;
 }
 
+TObject *InputFileManager::Get(const char *namecycle)
+{
+    if (fInFile)
+        return fInFile->Get(namecycle);
+    return nullptr;
+}
+
 double fgFreq = 433.995; // in unit of MHz, board TDC frequency
 double ConvertTDC2Time(uint64_t tdc, double &coarseTime, double &fineTime)
 {
@@ -309,5 +316,40 @@ int AlignOutputFileManager::AlignAllEntries()
         ;
     std::cout << "Totally aligned " << entries << " entries" << std::endl;
     gAlignWin->DisplayAlignedEntries(entries);
+
+    if (gInputFile->IsOpen())
+    {
+        // Write Temperature
+        for (int i = 0; i < 4; i++)
+        {
+            auto namecycle = Form("Temp%d", i);
+            auto tempString = (TString *)(gInputFile->Get(namecycle));
+            if (tempString)
+                fOutFile->WriteObject(tempString, namecycle);
+        }
+        // Write Board No
+        auto namecycle = Form("BoardNo");
+        auto writeStr = (TString *)(gInputFile->Get(namecycle));
+        if (writeStr)
+            fOutFile->WriteObject(writeStr, namecycle);
+
+        // Write Config
+        namecycle = Form("Config");
+        writeStr = (TString *)(gInputFile->Get(namecycle));
+        if (writeStr)
+            fOutFile->WriteObject(writeStr, namecycle);
+
+        // Write Logic
+        namecycle = Form("Logic");
+        writeStr = (TString *)(gInputFile->Get(namecycle));
+        if (writeStr)
+            fOutFile->WriteObject(writeStr, namecycle);
+
+        // Write DAQDatime
+        namecycle = Form("DAQDatime");
+        auto writeObj = (TDatime *)(gInputFile->Get(namecycle));
+        if (writeObj)
+            fOutFile->WriteObject(writeStr, namecycle);
+    }
     return entries;
 }
