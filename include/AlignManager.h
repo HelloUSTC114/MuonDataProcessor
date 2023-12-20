@@ -4,6 +4,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #define N_BOARD_CHANNELS 32
+#define MAX_ID_CONSTRAIN 0xFFFF0000
 
 // STL
 #include <string>

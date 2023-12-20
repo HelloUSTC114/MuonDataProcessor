@@ -262,6 +262,13 @@ int AlignOutputFileManager::AlignOneEntry(bool verbose)
         }
 
         auto maxid = TMath::Max(TMath::Max(hgid, lgid), tdcid);
+        if (maxid > MAX_ID_CONSTRAIN)
+        {
+            fHGCurrentEntry++;
+            fLGCurrentEntry++;
+            fTDCCurrentEntry++;
+            continue;
+        }
         bool idEqual = (hgid == maxid) && (lgid == maxid) && (tdcid == maxid);
         if (!idEqual)
         {
