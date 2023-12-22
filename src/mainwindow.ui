@@ -24,14 +24,14 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tabFilePreparation">
      <property name="enabled">
       <bool>true</bool>
      </property>
      <attribute name="title">
-      <string>Read One File</string>
+      <string>Trigger ID Match</string>
      </attribute>
      <widget class="QGroupBox" name="groupBox_3">
       <property name="geometry">
@@ -368,14 +368,14 @@
        <item row="1" column="0">
         <widget class="QPushButton" name="btnAlignOne">
          <property name="text">
-          <string>Align One Entry</string>
+          <string>Match One Entry</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
         <widget class="QPushButton" name="btnAlignAll">
          <property name="text">
-          <string>Align All</string>
+          <string>Match All</string>
          </property>
         </widget>
        </item>
@@ -409,7 +409,7 @@
           <item row="8" column="0">
            <widget class="QLabel" name="label_13">
             <property name="text">
-             <string>Aligned:</string>
+             <string>Matched:</string>
             </property>
            </widget>
           </item>
@@ -559,7 +559,7 @@
     </widget>
     <widget class="QWidget" name="tabAlignment">
      <attribute name="title">
-      <string>Batch Alignment</string>
+      <string>Batch ID Match</string>
      </attribute>
      <widget class="QFrame" name="frame_2">
       <property name="geometry">
@@ -665,7 +665,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Start Align</string>
+          <string>Start Match</string>
          </property>
         </widget>
        </item>
@@ -703,6 +703,138 @@
       <property name="checked">
        <bool>true</bool>
       </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>T0 TS Match</string>
+     </attribute>
+     <widget class="QTableWidget" name="tableT0Match">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>260</y>
+        <width>921</width>
+        <height>391</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QFrame" name="frame_3">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>40</y>
+        <width>891</width>
+        <height>106</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="1">
+        <widget class="QPushButton" name="btnT0TSInputPath">
+         <property name="text">
+          <string>Choose Path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" rowspan="2">
+        <widget class="QPushButton" name="btnReadT0Files">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Generate List</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLineEdit" name="lineT0InPath">
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>C:\Users\liang\Desktop\DetectorData\Logic3-Test</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="btnT0TSOutputPath">
+         <property name="text">
+          <string>Choose Path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Input Path:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLineEdit" name="lineT0OutPath">
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>C:\Users\liang\Desktop\DetectorData\Alinged-Logic3</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>Output Path:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5" rowspan="2">
+        <widget class="QPushButton" name="btnStartT0Match">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Start Match</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4" rowspan="2">
+        <widget class="Line" name="line_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </widget>
