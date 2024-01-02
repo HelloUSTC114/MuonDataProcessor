@@ -1,8 +1,11 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <TFile.h>
 #include <TTree.h>
-#define TS_JUDGE_RANGE (10000000)
+#define TS_JUDGE_RANGE (2e8)
+
+#ifdef TEST_INSIDE
 
 void ConvertTS2ROOT(int board = 0)
 {
@@ -20,8 +23,9 @@ void ConvertTS2ROOT(int board = 0)
     for (int row = 0; fin.is_open() && !fin.eof() && fin.good(); row++)
     {
         int boardID;
+        int iddev;
         double tsTemp;
-        fin >> boardID >> tsTemp;
+        fin >> boardID >> iddev >> tsTemp;
 
         //  Judge whether time deviation is larger than 1000 ns
         if ((tsTemp - preTS) < TS_JUDGE_RANGE && (row > 0))
@@ -51,7 +55,7 @@ public:
     bool Init(std::string sFileName = "TS.root", std::vector<int> boardArray = {0, 1, 2, 3, 4, 5});
     void ConvertAllTS();
     bool FindBegining();
-    bool RestoreNextTS();
+    bool SaveNextTS();
 
 private:
     TFile *fOutFile = NULL;
@@ -60,10 +64,10 @@ private:
     std::vector<int> fBoardArray;
     int fBoardCount = 0;
 
-    // Restore Data
+    // Save Data
     uint32_t fTSid;                         // Time stamp ID
     uint8_t fTSBoardCount;                  // How many boards has this time stamp
-    uint8_t fTSBoardStat[MAX_BOARD_COUNTS]; // which boards has this time stamp, no map, restore array index only
+    uint8_t fTSBoardStat[MAX_BOARD_COUNTS]; // which boards has this time stamp, no map, save array index only
     double fTS[MAX_BOARD_COUNTS];           // Time stamp for each board
     uint8_t fTSFlag[MAX_BOARD_COUNTS];      // Whether this board has time stamp
 
@@ -73,9 +77,9 @@ private:
     double fInTS[MAX_BOARD_COUNTS];
 
     // para for match
-    int fPreEntry[MAX_BOARD_COUNTS];        // Restore previous entry
-    double fPreTS[MAX_BOARD_COUNTS];        // Restore previous time stamp, infer its value if  the TS is missing
-    double fUnmatchedCum[MAX_BOARD_COUNTS]; // Restore accumulated unmatched time deviation
+    int fPreEntry[MAX_BOARD_COUNTS];        // Save previous entry
+    double fPreTS[MAX_BOARD_COUNTS];        // Save previous time stamp, infer its value if  the TS is missing
+    double fUnmatchedCum[MAX_BOARD_COUNTS]; // Save accumulated unmatched time deviation
 
     void CloseFile();
     bool Try_FindBegining(double AbsTimeStamp);
@@ -99,8 +103,8 @@ bool tempClass::Init(std::string sFileName, std::vector<int> boardArray)
     CloseFile();
     fOutFile = new TFile(sFileName.c_str(), "recreate");
 
-    // Restore board number information
-    fBNTree = new TTree("bnTree", "Tree restore all board number"); // Board number tree
+    // Save board number information
+    fBNTree = new TTree("bnTree", "Tree save all board number"); // Board number tree
     uint32_t boardNo;
     fBNTree->Branch("bn", &boardNo, "bn/i");
     fBoardArray = boardArray;
@@ -166,54 +170,79 @@ void tempClass::CloseFile()
     }
 }
 
-bool tempClass::RestoreNextTS()
+bool tempClass::SaveNextTS()
 {
-    static double fTSDev[MAX_BOARD_COUNTS]; // Restore calculated time stamp deviation, only for find minimum deviation
+    static double fTSDev[MAX_BOARD_COUNTS]; // Save calculated time stamp deviation, only for find minimum deviation
 
     // Find Minimum deviation
     double minDev = 0;
     bool minDevInitFlag = 0;
-    for (int i = 0; i < fBoardCount; i++)
+    for (int board = 0; board < fBoardCount; board++)
     {
-        if (fPreEntry[i] + 1 >= fInTrees[i]->GetEntries())
+        if (fPreEntry[board] + 1 >= fInTrees[board]->GetEntries())
             return false;
-        fInTrees[i]->GetEntry(fPreEntry[i] + 1);
-        fTSDev[i] = fInTS[i] - fPreTS[i] - fUnmatchedCum[i];
-        if (minDevInitFlag == 0 && TMath::Abs(fTSDev[i] - 1e9) < TS_JUDGE_RANGE)
+        fInTrees[board]->GetEntry(fPreEntry[board] + 1);
+        fTSDev[board] = fInTS[board] - fPreTS[board] - fUnmatchedCum[board];
+        // if (minDevInitFlag == 0 && TMath::Abs(fTSDev[board] - 1e9) < TS_JUDGE_RANGE)
+        if (minDevInitFlag == 0)
         {
-            minDev = fTSDev[i];
+            minDev = fTSDev[board];
             minDevInitFlag = 1;
         }
-        if (minDevInitFlag && minDev > fTSDev[i])
-            minDev = fTSDev[i];
+        if (minDevInitFlag && minDev > fTSDev[board])
+            minDev = fTSDev[board];
     }
-    std::cout << fTSid << '\t' << minDev << std::endl;
+    // std::cout << fTSid << '\t' << minDev << std::endl;
+    static int sgErrorCount = 0;
+    static int sgCountDown = 0;
+    if (minDev / 1e9 > 5)
+    {
+        // std::cout << "Error count: " << sgErrorCount << std::endl;
+        std::cout << std::setprecision(5) << minDev / 1e9;
+        for (int board = 0; board < fBoardCount; board++)
+        {
+            std::cout << '\t' << fTSDev[board] / 1e9 << '\t';
+        }
+        std::cout << std::endl;
+        sgErrorCount++;
+    }
+    if (sgErrorCount > 200)
+    {
+        sgCountDown++;
+        if (sgCountDown > 100)
+            return false;
+    }
 
     fTSBoardCount = 0;
-    for (int i = 0; i < fBoardCount; i++)
+    static int gInsideEntry = 0;
+    gInsideEntry++;
+    for (int board = 0; board < fBoardCount; board++)
     {
-        std::cout << i << '\t' << fPreEntry[i] << '\t' << (bool)fTSFlag[i] << '\t' << minDev << '\t' << fInTS[i] / 1e9 << '\t' << fPreTS[i] / 1e9 << '\t' << fTSDev[i] / 1e9 << '\t' << fUnmatchedCum[i] / 1e9 << '\t' << (TMath::Abs(fTSDev[i] - minDev) < TS_JUDGE_RANGE) << std::endl;
+        // std::cout << board << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << minDev << '\t' << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << (TMath::Abs(fTSDev[board] - minDev) < TS_JUDGE_RANGE) << std::endl;
 
         // If TS matched
-        if (TMath::Abs(fTSDev[i] - minDev) < TS_JUDGE_RANGE)
+        if (TMath::Abs(fTSDev[board] - minDev) < TS_JUDGE_RANGE)
         // if (1)
         {
-            fTSBoardStat[fTSBoardCount++] = i;
-            fTS[i] = fInTS[i];
-            fTSFlag[i] = 1;
+            fTSBoardStat[fTSBoardCount++] = board;
+            fTS[board] = fInTS[board];
+            fTSFlag[board] = 1;
 
-            fPreEntry[i]++;
-            fUnmatchedCum[i] = 0;
-            fPreTS[i] = fTS[i];
+            fPreEntry[board]++;
+            fUnmatchedCum[board] = 0;
+            fPreTS[board] = fTS[board];
         }
         else // if not matched
         {
-            fUnmatchedCum[i] += minDev;
-            fTSFlag[i] = 0;
+            fUnmatchedCum[board] += minDev;
+            fTSFlag[board] = 0;
+            fTS[board] = fPreTS[board] + fUnmatchedCum[board];
+            // std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (TMath::Abs(fTSDev[board] - minDev) < TS_JUDGE_RANGE) << std::endl;
+            std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
         }
-        // std::cout << i << '\t' << minDev << '\t' << fTSDev[i] << '\t' << fTSDev[i] - minDev - fUnmatchedCum[i] << std::endl;
+        // std::cout << board << '\t' << minDev << '\t' << fTSDev[board] << '\t' << fTSDev[board] - minDev - fUnmatchedCum[board] << std::endl;
     }
-    std::cout << std::endl;
+    // std::cout << std::endl;
     fTree->Fill();
     fTSid++;
 
@@ -286,16 +315,20 @@ void ProcessTS()
     tempClass a;
     a.Init();
     std::cout << a.FindBegining() << std::endl;
-    std::cout << a.RestoreNextTS() << std::endl;
+    std::cout << a.SaveNextTS() << std::endl;
     // return;
     int counter = 0;
     for (;; counter++)
     {
-        auto flag = a.RestoreNextTS();
+        auto flag = a.SaveNextTS();
         if (!flag)
             break;
-        std::cout << flag << std::endl;
+        // std::cout << flag << std::endl;
+        if (counter > 100000)
+            break;
     }
-    return;
     std::cout << counter << std::endl;
+    return;
 }
+
+#endif

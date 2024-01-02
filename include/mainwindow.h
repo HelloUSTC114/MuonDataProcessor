@@ -5,9 +5,11 @@
 #include <QMainWindow>
 #include <QString>
 #include <QThread>
+#include <QVector>
 
 // C++ STL
 #include <string>
+#include <vector>
 
 // ROOT
 #include <TFile.h>
@@ -25,10 +27,19 @@ class AlignRuning : public QObject
 {
     Q_OBJECT
 signals:
+    // For Batch align (Inside board) tasks
     void stopAlignSignal(QString sFileName, int alignedEntry);
     void updateRowSignal(QString sInput, int hgEntry, int lgEntry, int tdcEntry);
+
+    // For T0Match task
+    void updateT0Row(int boardIndex, int T0TSCounter, double startT0, double endT0);
+    void stopT0Signal(std::vector<int> *matchedEntries);
 public slots:
+    // For Batch align (Inside board) tasks
     void startAlign(QString sInput, QString sOutput);
+
+    // For T0Match task
+    void startT0Match(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
 
 private:
     QString fsFileName;
@@ -82,11 +93,22 @@ private slots:
 
     void handle_AlignDone(QString sInput, int alignedEntry);
     void handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int tdcEntry);
+    void handle_UpdateT0Row(int boardIndex, int T0TSCounter, double startT0, double endT0);
+    void handle_T0Done(std::vector<int> *matchedEntries);
 
     void on_btnGenerateFileList_clicked();
 
+    void on_btnReadT0Files_clicked();
+
+    void on_btnT0TSInputPath_clicked();
+
+    void on_btnT0TSOutputPath_clicked();
+
+    void on_btnStartT0Match_clicked();
+
 signals:
     void startAlignRequest(QString sInput, QString sOutput);
+    void startT0Request(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
 
 private:
     Ui::Mainwindow *ui;
@@ -111,6 +133,11 @@ private:
     // Batch Align
     QString sBatchInPath = "", sBatchOutPath = "";
     QStringList sInFileList, sOutFileList;
+
+    // T0 Match
+    QString sT0InPath = "E:\\Data\\CRTest-3XY-Detectors\\Logic-6&\\3\\Source", sT0OutPath = "";
+    QStringList sT0InList, sT0OutList;
+    QVector<int> fBoardArray;
 
     // Align Manager Thread
     AlignRuning *fAlignWorker;

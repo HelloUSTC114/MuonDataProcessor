@@ -1,5 +1,3 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
 
 #include <QTableWidgetItem>
 #include <QStringList>
@@ -8,6 +6,11 @@
 #include <QFileDialog>
 
 #include <iostream>
+
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include "T0TS.h"
+
 void AlignRuning::startAlign(QString sInput, QString sOutput)
 {
     if (gInputFile->IsOpen())
@@ -28,6 +31,39 @@ void AlignRuning::startAlign(QString sInput, QString sOutput)
     emit updateRowSignal(sInput, gInputFile->GetEntries(hgTree), gInputFile->GetEntries(lgTree), gInputFile->GetEntries(tdcTree));
     auto rtn = gAlignOutput->AlignAllEntries();
     emit stopAlignSignal(sInput, rtn);
+}
+
+void AlignRuning::startT0Match(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir)
+{
+    QDir dir;
+    std::string txtInPath = sInputTxtDir.toStdString();
+    std::string sT0FinalROOTPath = sOutputROOTDir.toStdString();
+    std::string sROOTOutPath = txtInPath + "/T0TS/";
+    dir.mkdir(QString::fromStdString(sROOTOutPath));
+
+    gT0Manager->ForceClear();
+    gT0Manager->InitBoardArray(std::vector<int>(boardArray->begin(), boardArray->end()), txtInPath, sROOTOutPath);
+    for (int i = 0; i < boardArray->size(); i++)
+    {
+        int entries;
+        double startT0, endT0;
+        auto counter = gT0Manager->ConvertTS(i, entries, startT0, endT0);
+        emit updateT0Row(i, entries, startT0 / 1e9, endT0 / 1e9);
+    }
+    gT0Manager->ConvertAllTS();
+
+    std::string sT0FinalROOTFile = txtInPath + "./TS.root";
+    gT0Manager->InitT0Matching(sT0FinalROOTFile);
+    gT0Manager->FindBegining();
+    int counter = 0;
+    for (;; counter++)
+    {
+        auto flag = gT0Manager->SaveNextTS();
+        if (!flag)
+            break;
+    }
+    // gT0Manager->MatchT0(boardArray, sInputTxtDir.toStdString(), sOutputROOTDir.toStdString());
+    emit stopT0Signal(&gT0Manager->GetInsideMatchedCounter());
 }
 
 Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
@@ -107,6 +143,38 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     ui->tableBatchAlign->setColumnWidth(4, 200);
     ui->tableBatchAlign->setColumnWidth(5, 80);
 
+    // Setting T0 Match Table
+    QTableWidgetItem *t0MatchHeader;
+    QStringList t0MatchText;
+    t0MatchText
+        << "Board No"
+        << "Input File"
+        << "Output File"
+        << "Entries"
+        << "First"
+        << "Last"
+        << "Matched Entries";
+    ui->tableT0Match->setColumnCount(t0MatchText.count());
+
+    for (int i = 0; i < ui->tableT0Match->columnCount(); i++)
+    {
+        t0MatchHeader = new QTableWidgetItem(t0MatchText.at(i));
+        QFont font = t0MatchHeader->font();
+        font.setBold(true);
+        font.setPointSize(12);
+        t0MatchHeader->setFont(font);
+        ui->tableT0Match->setHorizontalHeaderItem(i, t0MatchHeader);
+    }
+    ui->tableT0Match->verticalHeader()->setVisible(0);
+    ui->tableT0Match->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableT0Match->setColumnWidth(0, 50);
+    ui->tableT0Match->setColumnWidth(1, 200);
+    ui->tableT0Match->setColumnWidth(2, 200);
+    ui->tableT0Match->setColumnWidth(3, 75);
+    ui->tableT0Match->setColumnWidth(4, 75);
+    ui->tableT0Match->setColumnWidth(5, 75);
+    ui->tableT0Match->setColumnWidth(6, 75);
+
     // Setting ui
     ui->btnCloseFile->setEnabled(0);
     ui->btnCloseOutputFile->setEnabled(0);
@@ -117,8 +185,11 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     fAlignWorker = new AlignRuning;
     fAlignWorker->moveToThread(&fWorkThread);
     connect(this, &Mainwindow::startAlignRequest, fAlignWorker, &AlignRuning::startAlign);
+    connect(this, &Mainwindow::startT0Request, fAlignWorker, &AlignRuning::startT0Match);
     connect(fAlignWorker, &AlignRuning::stopAlignSignal, this, &Mainwindow::handle_AlignDone);
     connect(fAlignWorker, &AlignRuning::updateRowSignal, this, &Mainwindow::handle_UpdateRow);
+    connect(fAlignWorker, &AlignRuning::updateT0Row, this, &Mainwindow::handle_UpdateT0Row);
+    connect(fAlignWorker, &AlignRuning::stopT0Signal, this, &Mainwindow::handle_T0Done);
     connect(&fWorkThread, &QThread::finished, fAlignWorker, &QObject::deleteLater);
     fWorkThread.start();
 }
@@ -561,7 +632,7 @@ void Mainwindow::on_lineBatchOutPath_textChanged(const QString &arg1)
 
 #include <QDir>
 #include <QStringList>
-QString ProcessOutputName(QString sInput)
+QString ProcessRAWDataOutputName(QString sInput)
 {
     auto filename = sInput.mid(0, sInput.size() - 5);
     QString sOutPre = "";
@@ -666,6 +737,37 @@ void Mainwindow::handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int 
     ui->tableBatchAlign->setItem(handle, 3, item);
 }
 
+void Mainwindow::handle_UpdateT0Row(int boardIndex, int T0TSCounter, double startT0, double endT0)
+{
+    // std::cout << "Signal in updating" << '\t' << boardIndex << '\t' << T0TSCounter << std::endl;
+    int handle = boardIndex;
+    auto item = new QTableWidgetItem(QString::number(T0TSCounter));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableT0Match->setItem(handle, 3, item);
+
+    item = new QTableWidgetItem(QString::number(startT0));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableT0Match->setItem(handle, 4, item);
+
+    item = new QTableWidgetItem(QString::number(endT0));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->tableT0Match->setItem(handle, 5, item);
+}
+
+void Mainwindow::handle_T0Done(std::vector<int> *matchedEntries)
+{
+    int handle;
+    QTableWidgetItem *item;
+
+    for (int i = 0; i < matchedEntries->size(); i++)
+    {
+        handle = i;
+        item = new QTableWidgetItem(QString::number(matchedEntries->at(i)));
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableT0Match->setItem(handle, 6, item);
+    }
+}
+
 void Mainwindow::on_btnGenerateFileList_clicked()
 {
     // Verify path
@@ -709,7 +811,7 @@ void Mainwindow::on_btnGenerateFileList_clicked()
         ui->tableBatchAlign->setItem(i, 0, item);
         // std::cout << sInFileList.at(i).toStdString() << std::endl;
 
-        auto outFileName = ProcessOutputName(filename);
+        auto outFileName = ProcessRAWDataOutputName(filename);
         if (ui->ckbTimeStamp->isChecked())
             item = new QTableWidgetItem(outFileName + "-(Time Stamp).root");
         else
@@ -721,6 +823,108 @@ void Mainwindow::on_btnGenerateFileList_clicked()
         // Add Full Path in Inside List
         sInFileList[i] = sBatchInPath + "/" + sInFileList[i];
         sOutFileList.push_back(sBatchOutPath + "/" + outFileName);
-        // std::cout << ProcessOutputName(filename).toStdString() << std::endl;
+        // std::cout << ProcessRAWDataOutputName(filename).toStdString() << std::endl;
     }
+}
+
+QString ProcessT0OutputName(QString sInput, int &boardNo)
+{
+    auto filename = sInput.mid(0, sInput.size() - 4);
+    QString sOutPre = "";
+
+    bool fTimeStampFlag = 0;
+    sOutPre = filename;
+    auto sOutName = sOutPre;
+    //  + QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") + ".root";
+
+    auto sBoardNo = filename.mid(5, filename.size() - 7);
+    boardNo = sBoardNo.toInt();
+    return sOutName;
+}
+
+void Mainwindow::on_btnReadT0Files_clicked()
+{
+    // Verify path
+    if (sT0InPath == "" || sT0OutPath == "")
+        return;
+
+    QDir dir(sT0InPath);
+    QStringList nameFilters;
+    nameFilters << "Board*TS.txt";
+
+    sT0InList = dir.entryList(nameFilters, QDir::Files | QDir::Readable, QDir::Name);
+    sT0OutList.clear();
+    if (sT0InList.size() == 0)
+    {
+        QString text = "Find no file in " + sT0InPath;
+        QMessageBox::information(this, "Error while open File.", text, QMessageBox::Ok, QMessageBox::Cancel);
+        return;
+    }
+
+    dir.setPath(sT0OutPath);
+    if (!dir.exists())
+    {
+        QString text = "Folder " + sT0InPath + " Not Exists.";
+        QMessageBox::information(this, "Error while open File.", text, QMessageBox::Ok, QMessageBox::Cancel);
+        return;
+    }
+
+    // Close all file in test align mode
+    on_btnCloseFile_clicked();
+    on_btnCloseOutputFile_clicked();
+
+    QTableWidgetItem *item;
+    ui->tableT0Match->clearContents();
+    ui->tableT0Match->setRowCount(sT0InList.size());
+    fBoardArray.clear();
+    for (int i = 0; i < sT0InList.size(); i++)
+    {
+        auto filename = sT0InList.at(i);
+
+        item = new QTableWidgetItem(filename);
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableT0Match->setItem(i, 1, item);
+        // std::cout << sT0InList.at(i).toStdString() << std::endl;
+
+        int boardNo;
+        auto outFileName = ProcessT0OutputName(filename, boardNo);
+
+        item = new QTableWidgetItem(outFileName + ".root");
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableT0Match->setItem(i, 2, item);
+
+        item = new QTableWidgetItem(QString::number(boardNo));
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableT0Match->setItem(i, 0, item);
+
+        fBoardArray.push_back(boardNo);
+
+        // Add Full Path in Inside List
+        sT0InList[i] = sT0InPath + "/" + sT0InList[i];
+        sT0OutList.push_back(sT0OutPath + "/" + outFileName);
+        // std::cout << ProcessRAWDataOutputName(filename).toStdString() << std::endl;
+    }
+}
+
+void Mainwindow::on_btnT0TSInputPath_clicked()
+{
+    if (sT0InPath == "")
+        sT0InPath = sCurrentPath;
+    sT0InPath = QFileDialog::getExistingDirectory(this, "Choose Batch Align Input Path.", sT0InPath);
+    if (sT0InPath != "" && sT0OutPath == "")
+        sT0OutPath = sT0InPath;
+    ui->lineT0InPath->setText(sT0InPath);
+}
+
+void Mainwindow::on_btnT0TSOutputPath_clicked()
+{
+    if (sT0OutPath == "")
+        sT0OutPath = sT0InPath;
+    sT0OutPath = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sT0OutPath);
+    ui->lineT0OutPath->setText(sT0OutPath);
+}
+
+void Mainwindow::on_btnStartT0Match_clicked()
+{
+    emit startT0Request(&fBoardArray, sT0InPath, sT0OutPath);
 }
