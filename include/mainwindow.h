@@ -106,6 +106,14 @@ private slots:
 
     void on_btnStartT0Match_clicked();
 
+    void on_btnT0TSFile_clicked();
+
+    void on_btnBoardPath_clicked();
+
+    void on_btnReadBoardData_clicked();
+
+    void on_btnStartBoardMatch_clicked();
+
 signals:
     void startAlignRequest(QString sInput, QString sOutput);
     void startT0Request(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);

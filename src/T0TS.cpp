@@ -6,65 +6,6 @@
 
 namespace T0Process
 {
-    void ConvertTS2ROOT(int board = 0)
-    {
-        auto file = new TFile(Form("Board%dTS.root", board), "recreate");
-        auto tree = new TTree(Form("ts%d", board), Form("Time Stamp for board %d", board));
-
-        uint32_t tsid = 0;
-        double ts;
-        tree->Branch("tsid", &tsid, "tsid/i");
-        tree->Branch("ts", &ts, "ts/D");
-
-        std::ifstream fin;
-        fin.open(Form("Board%dTS.txt", board));
-        double preTS = 0;
-        for (int row = 0; fin.is_open() && !fin.eof() && fin.good(); row++)
-        {
-            int boardID;
-            int iddev;
-            double tsTemp;
-            fin >> boardID >> iddev >> tsTemp;
-
-            //  Judge whether time deviation is larger than 1000 ns
-            if ((tsTemp - preTS) < TS_JUDGE_RANGE && (row > 0))
-                continue;
-
-            tsid = boardID;
-            ts = tsTemp;
-            tree->Fill();
-            preTS = tsTemp;
-        }
-        tree->Write();
-        file->Close();
-        delete file;
-    }
-
-    void ProcessTS()
-    {
-        for (int board = 0; board < 6; board++)
-        {
-            T0Process::ConvertTS2ROOT(board);
-        }
-        BoardT0Manager a;
-        a.InitT0Matching();
-        std::cout << a.FindBegining() << std::endl;
-        std::cout << a.SaveNextTS() << std::endl;
-        // return;
-        int counter = 0;
-        for (;; counter++)
-        {
-            auto flag = a.SaveNextTS();
-            if (!flag)
-                break;
-            // std::cout << flag << std::endl;
-            if (counter > 100000)
-                break;
-        }
-        std::cout << counter << std::endl;
-        return;
-    }
-
     int MatchT0(std::vector<int> boardArray, std::string txtInPath, std::string sT0FinalROOTPath)
     {
         QDir dir;
@@ -84,6 +25,88 @@ namespace T0Process
             if (!flag)
                 break;
         }
+        return counter;
+    }
+
+    int ConvertTS2ROOT(std::string sInfile, std::string sOutFile)
+    {
+        int entries;
+        double startT0, endT0;
+        return ConvertTS2ROOT(sInfile, sOutFile, entries, startT0, endT0);
+    }
+
+    int ConvertTS2ROOT(std::string sInfile, std::string sOutFile, int &entries, double &startT0, double &endT0)
+    {
+        // Judge whether exists sOutFile
+        std::ifstream finTemp(sOutFile.c_str());
+        if (finTemp.is_open())
+        {
+            finTemp.close();
+            auto file = new TFile(sOutFile.c_str());
+            auto tree = (TTree *)(file->Get("ts"));
+
+            uint32_t tsid = 0;
+            double ts;
+            tree->SetBranchAddress("tsid", &tsid);
+            tree->SetBranchAddress("ts", &ts);
+            entries = tree->GetEntries();
+
+            tree->GetEntry(0);
+            startT0 = ts;
+            tree->GetEntry(entries - 1);
+            endT0 = ts;
+            // std::cout << std::setprecision(11) << entries << '\t' << startT0 / 1e9 << '\t' << endT0 / 1e9 << std::endl;
+
+            return 0;
+        }
+
+        auto file = new TFile(sOutFile.c_str(), "recreate");
+        if (!file->IsWritable())
+        {
+            std::cout << "Error: Cannot openfile: " << sOutFile << std::endl;
+            return 0;
+        }
+        auto tree = new TTree("ts", "T0 time stamp");
+
+        uint32_t tsid = 0;
+        double ts;
+        tree->Branch("tsid", &tsid, "tsid/i");
+        tree->Branch("ts", &ts, "ts/D");
+
+        std::ifstream fin;
+        fin.open(sInfile.c_str());
+        double preTS = 0;
+        int counter = 0;
+        for (int row = 0; fin.is_open() && !fin.eof() && fin.good(); row++)
+        {
+            int boardID;
+            int iddev;
+            double tsTemp;
+            fin >> boardID >> iddev >> tsTemp;
+
+            //  Judge whether time deviation is larger than 1000 ns
+            if ((tsTemp - preTS) < TS_JUDGE_RANGE && (row > 0))
+                continue;
+            if (fin.eof())
+                break;
+
+            tsid = boardID;
+            ts = tsTemp;
+            tree->Fill();
+            counter++;
+            preTS = tsTemp;
+        }
+
+        // Assign statistics variables
+        entries = counter;
+        tree->GetEntry(0);
+        startT0 = ts;
+        tree->GetEntry(counter - 1);
+        endT0 = ts;
+
+        tree->Write();
+        file->Close();
+        delete file;
         return counter;
     }
 }
@@ -314,7 +337,8 @@ bool BoardT0Manager::SaveNextTS()
             fTSFlag[board] = 0;
             fTS[board] = fPreTS[board] + fUnmatchedCum[board];
             // std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (TMath::Abs(fTSDev[board] - minDev) < TS_JUDGE_RANGE) << std::endl;
-            std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
+            // std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
+            std::cout << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
         }
         // std::cout << board << '\t' << minDev << '\t' << fTSDev[board] << '\t' << fTSDev[board] - minDev - fUnmatchedCum[board] << std::endl;
     }
@@ -323,88 +347,6 @@ bool BoardT0Manager::SaveNextTS()
     fTSid++;
 
     return true;
-}
-
-int T0Process::ConvertTS2ROOT(std::string sInfile, std::string sOutFile)
-{
-    int entries;
-    double startT0, endT0;
-    return ConvertTS2ROOT(sInfile, sOutFile, entries, startT0, endT0);
-}
-
-int T0Process::ConvertTS2ROOT(std::string sInfile, std::string sOutFile, int &entries, double &startT0, double &endT0)
-{
-    // Judge whether exists sOutFile
-    std::ifstream finTemp(sOutFile.c_str());
-    if (finTemp.is_open())
-    {
-        finTemp.close();
-        auto file = new TFile(sOutFile.c_str());
-        auto tree = (TTree *)(file->Get("ts"));
-
-        uint32_t tsid = 0;
-        double ts;
-        tree->SetBranchAddress("tsid", &tsid);
-        tree->SetBranchAddress("ts", &ts);
-        entries = tree->GetEntries();
-
-        tree->GetEntry(0);
-        startT0 = ts;
-        tree->GetEntry(entries - 1);
-        endT0 = ts;
-        // std::cout << std::setprecision(11) << entries << '\t' << startT0 / 1e9 << '\t' << endT0 / 1e9 << std::endl;
-
-        return 0;
-    }
-
-    auto file = new TFile(sOutFile.c_str(), "recreate");
-    if (!file->IsWritable())
-    {
-        std::cout << "Error: Cannot openfile: " << sOutFile << std::endl;
-        return 0;
-    }
-    auto tree = new TTree("ts", "T0 time stamp");
-
-    uint32_t tsid = 0;
-    double ts;
-    tree->Branch("tsid", &tsid, "tsid/i");
-    tree->Branch("ts", &ts, "ts/D");
-
-    std::ifstream fin;
-    fin.open(sInfile.c_str());
-    double preTS = 0;
-    int counter = 0;
-    for (int row = 0; fin.is_open() && !fin.eof() && fin.good(); row++)
-    {
-        int boardID;
-        int iddev;
-        double tsTemp;
-        fin >> boardID >> iddev >> tsTemp;
-
-        //  Judge whether time deviation is larger than 1000 ns
-        if ((tsTemp - preTS) < TS_JUDGE_RANGE && (row > 0))
-            continue;
-        if (fin.eof())
-            break;
-
-        tsid = boardID;
-        ts = tsTemp;
-        tree->Fill();
-        counter++;
-        preTS = tsTemp;
-    }
-
-    // Assign statistics variables
-    entries = counter;
-    tree->GetEntry(0);
-    startT0 = ts;
-    tree->GetEntry(counter - 1);
-    endT0 = ts;
-
-    tree->Write();
-    file->Close();
-    delete file;
-    return counter;
 }
 
 bool BoardT0Manager::FindBegining()
@@ -464,4 +406,516 @@ bool BoardT0Manager::Try_FindBegining(double AbsTimeStamp)
             return false;
     }
     return true;
+}
+
+#include "Trees.h"
+
+DataMatchManager *DataMatchManager::Instance()
+{
+    static auto instance = new DataMatchManager();
+    return instance;
+}
+
+bool DataMatchManager::InitBoardArray(std::vector<int> boardArray)
+{
+    if (fBoardArrayInitFlag)
+        return false;
+
+    fBoardArray = boardArray;
+    if (boardArray.size() > MAX_BOARD_COUNTS)
+        fBoardArray.resize(MAX_BOARD_COUNTS);
+    fBoardCount = fBoardArray.size();
+    return true;
+}
+
+void DataMatchManager::CloseFile()
+{
+    if (fMatchFile)
+    {
+        if (fMatchTree)
+        {
+            fMatchTree->Write();
+            fMatchTree = NULL;
+        }
+        if (fBNTree)
+        {
+            fBNTree->Write();
+            fBNTree = NULL;
+        }
+        delete fMatchFile;
+        fMatchFile = NULL;
+    }
+    for (int board = 0; board < fBoardCount; board++)
+        if (fBoard[board])
+        {
+            delete fBoard[board];
+            fBoard[board] = NULL;
+        }
+    if (fTS)
+    {
+        delete fTS;
+        fTS = NULL;
+    }
+
+    fsBoardDataFolder = "";
+    fsT0TSFile = "";
+    fBoardArray.clear();
+    fBoardCount = 0;
+    fBoardArrayInitFlag = 0;
+    fT0Flag = 0;
+    fBoardFlag = 0;
+}
+
+bool DataMatchManager::JudgeBoardFlag(bool *flags, int boardNumber)
+{
+    for (int i = 0; i < boardNumber; i++)
+    {
+        if (!flags[i])
+            return false;
+    }
+    return true;
+}
+
+bool DataMatchManager::FindStamp(int startEntry, double *stampArray, int *devFromStart)
+{
+    fTS->fChain->GetEntry(startEntry);
+
+    bool findFlag[MAX_BOARD_COUNTS]{0};
+
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        findFlag[board] = 0;
+        devFromStart[board] = 0;
+    }
+    for (int entry = startEntry; !JudgeBoardFlag(findFlag, fBoardCount); entry++)
+    {
+        if (entry >= fTS->fChain->GetEntries())
+            return false;
+        fTS->GetEntry(entry);
+        for (int board = 0; board < fBoardCount; board++)
+        {
+            if (findFlag[board])
+                continue;
+
+            if (fTS->tsFlag[board])
+            {
+                findFlag[board] = true;
+                stampArray[board] = fTS->ts[board];
+            }
+            else
+            {
+                devFromStart[board]++;
+            }
+        }
+    }
+    fTS->fChain->GetEntry(startEntry);
+    return true;
+}
+
+bool DataMatchManager::UpdateInterval(int startEntry)
+{
+    double tsPre[MAX_BOARD_COUNTS];
+    int devCount[MAX_BOARD_COUNTS];
+    bool tsIntervalFlag[MAX_BOARD_COUNTS]{0};
+
+    for (int entry = startEntry; !JudgeBoardFlag(tsIntervalFlag, fBoardCount); entry++)
+    {
+        if (entry >= fTS->fChain->GetEntries())
+            return false;
+        fTS->GetEntry(entry);
+#ifdef DEBUG_INTERVAL
+        std::cout << entry << '\t';
+        std::cout << "Calculating first time stamp interval" << std::endl;
+#endif
+        for (int board = 0; board < fBoardCount; board++)
+        {
+            if (fTS->tsFlag[board])
+            {
+                double tsDev = fTS->ts[board] - tsPre[board];
+                tsDev /= devCount[board] + 1;
+                if (TMath::Abs(tsDev - 1e9) < 0.01e9)
+                {
+                    fTSInterval[board] = tsDev;
+                    tsIntervalFlag[board] = 1;
+                }
+#ifdef DEBUG_INTERVAL
+                std::cout << fTS->ts[board] / 1e9 << '\t' << tsDev / 1e9 - 1 << '\t';
+#endif
+                devCount[board] = 0;
+                tsPre[board] = fTS->ts[board];
+                if (TMath::Abs(fTSInterval[board] / fT0TSInterval2[board] - 1) * 1e6 < 1)
+                {
+                    fCurrentValidInterval[board] = fTSInterval[board];
+                    fCurrentValidSegPoint[board] = fTS->ts[board];
+                }
+            }
+            else
+            {
+                devCount[board]++;
+#ifdef DEBUG_INTERVAL
+                std::cout << "Void \t"
+                          << "Void \t";
+#endif
+            }
+        }
+#ifdef DEBUG_INTERVAL
+        std::cout
+            << std::endl;
+#endif
+    }
+    return true;
+}
+
+bool DataMatchManager::InitiateT0TS(std::string sT0TSFile)
+{
+    if (fT0Flag)
+        return false;
+    fTS = new ROOTTrees::tsTree(sT0TSFile.c_str());
+    fT0Flag = 1;
+
+    UpdateInterval(0);
+
+    fTS->GetEntry(0);
+    std::cout << "calculated initiated time interval: " << std::endl;
+    fTSReadingEntry = 0;
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        fLastSeg[board] = fTS->ts[board];
+        std::cout << "Board index: " << board << '\t' << "First Time stamp(s): " << '\t' << fLastSeg[board] / 1e9 << '\t' << " Time Interval(s): " << fTSInterval[board] / 1e9 << '\t' << std::endl;
+
+        int startIdx = 30;
+        int endIdx = fTS->fChain->GetEntries() - 100;
+        // int endIdx = 100;
+        // int endIdx = 1020;
+        double ts1, ts2;
+        for (; startIdx < fTS->fChain->GetEntries(); startIdx++)
+        {
+            fTS->fChain->GetEntry(startIdx);
+            if (fTS->tsFlag[board])
+                break;
+        }
+        ts1 = fTS->ts[board];
+
+        for (; endIdx > 0; endIdx--)
+        {
+            fTS->fChain->GetEntry(endIdx);
+            if (fTS->tsFlag[board])
+                break;
+        }
+        ts2 = fTS->ts[board];
+        int clockCount = 0;
+        double tsPre, tsNow;
+        fTS->GetEntry(startIdx);
+        tsPre = fTS->ts[board];
+        for (int idx = startIdx + 1; idx <= endIdx; idx++)
+        {
+            fTS->GetEntry(idx);
+            tsNow = fTS->ts[board];
+            double dev = tsNow - tsPre;
+            clockCount += round(dev / 1e9);
+            // std::cout << dev << '\t' << round(dev / 1e9) << std::endl;
+            tsPre = tsNow;
+        }
+        // fT0TSInterval2[board] = (ts2 - ts1) / (endIdx - startIdx);
+        fT0TSInterval2[board] = (ts2 - ts1) / clockCount;
+        fT0TSStart2[board] = (ts1 - startIdx * fT0TSInterval2[board]);
+        fCurrentValidInterval[board] = fT0TSInterval2[board];
+        fCurrentValidSegPoint[board] = fT0TSStart2[board];
+        std::cout << "startIdx: " << startIdx << " endIdx: " << endIdx << " count: " << clockCount << " interval: " << fT0TSInterval2[board] << std::endl
+                  << std::endl;
+    }
+    return true;
+}
+
+bool DataMatchManager::UpdateSegPoint(int startEntry)
+{
+    double stamp[MAX_BOARD_COUNTS];
+    int dev[MAX_BOARD_COUNTS];
+    bool flag;
+    flag = FindStamp(startEntry, stamp, dev);
+    if (!flag)
+        return false;
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        fLastSeg[board] = stamp[board] - dev[board] * fTSInterval[board];
+    }
+    flag = FindStamp(startEntry + 1, stamp, dev);
+    if (flag)
+        for (int board = 0; board < fBoardCount; board++)
+            fNextSeg[board] = stamp[board] - dev[board] * fTSInterval[board];
+    else
+        for (int board = 0; board < fBoardCount; board++)
+            fNextSeg[board] = fLastSeg[board] + fTSInterval[board];
+
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        fLastSeg2[board] = round((fLastSeg[board] - fCurrentValidSegPoint[board]) / fCurrentValidInterval[board]) * fCurrentValidInterval[board] + fCurrentValidSegPoint[board];
+        fNextSeg2[board] = round((fNextSeg[board] - fCurrentValidSegPoint[board]) / fCurrentValidInterval[board]) * fCurrentValidInterval[board] + fCurrentValidSegPoint[board];
+    }
+
+    // std::cout << "Segment: " << startEntry << '\t';
+    // for (int board = 0; board < fBoardCount; board++)
+    //     std::cout << fLastSeg[board] / 1e9 << '\t' << fNextSeg[board] / 1e9 << '\t';
+    // std::cout << std::endl;
+    return true;
+}
+
+bool DataMatchManager::GenerateBoardMap(std::string sBoardDataFolder)
+{
+    if (fBoardFlag)
+        return false;
+    fsBoardDataFolder = sBoardDataFolder;
+    for (int i = 0; i < fBoardCount; i++)
+        fBoard[i] = new ROOTTrees::board(Form("%s/Board%d-Aligned.root", fsBoardDataFolder.c_str(), fBoardArray[i]));
+
+    fBoardFlag = 1;
+    return true;
+}
+
+void DataMatchManager::InitMatchFile()
+{
+    fMatchFile = new TFile("MatchEntries.root", "recreate");
+    fMatchTree = new TTree("match", "matched entries");
+    fMatchTree->Branch("counter", &fMatchCounter, "counter/I");
+    fMatchTree->Branch("matchedBoard", fMatchedBoard, "matchedBoard[counter]/I");
+    fMatchTree->Branch("matchFlag", fMatchFlag, Form("matchFlag[%d]/I", fBoardCount));
+    fMatchTree->Branch("matchEntry", fMatchEntry, Form("matchEntry[%d]/l", fBoardCount));
+    fMatchTree->Branch("matchTime", fMatchTime, Form("matchTime[%d]/D", fBoardCount));
+    fMatchTree->Branch("lastSeg", fLastSeg, Form("lastSeg[%d]/D", fBoardCount));
+    fMatchTree->Branch("nextSeg", fNextSeg, Form("nextSeg[%d]/D", fBoardCount));
+    fMatchTree->Branch("lastSeg2", fLastSeg2, Form("lastSeg2[%d]/D", fBoardCount));
+    fMatchTree->Branch("nextSeg2", fNextSeg2, Form("nextSeg2[%d]/D", fBoardCount));
+    fMatchTree->Branch("interval", fTSInterval, Form("interval[%d]/D", fBoardCount));
+    fMatchTree->Branch("interval2", fT0TSInterval2, Form("interval2[%d]/D", fBoardCount));
+    fMatchTree->Branch("currentInterval", fCurrentValidInterval, Form("currentInterval[%d]/D", fBoardCount));
+    fMatchTree->Branch("currentSegPoint", fCurrentValidSegPoint, Form("currentSegPoint[%d]/D", fBoardCount));
+    fMatchTree->AutoSave();
+
+    // Save board number information
+    fBNTree = new TTree("bnTree", "Tree save all board number"); // Board number tree
+    uint32_t boardNo;
+    fBNTree->Branch("bn", &boardNo, "bn/i");
+    for (int i = 0; i < fBoardCount; i++)
+    {
+        boardNo = fBoardArray[i];
+        fBNTree->Fill();
+    }
+}
+
+int DataMatchManager::JudgeEventTime(double eventTime, int boardNo)
+{
+    if (eventTime < fLastSeg[boardNo])
+        return -1;
+    else if (eventTime < fNextSeg[boardNo])
+        return 0;
+    else
+        return 1;
+}
+
+bool DataMatchManager::FindAllEventsInSeg(int segEntry, int *startEntries, int *endEntries)
+{
+    if (!UpdateSeg(segEntry))
+        return false;
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        int idx = fCurrentEntries[board];
+        fBoard[board]->GetEntry(idx);
+        auto eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+        if (JudgeEventTime(eventTime, board) < 0)
+        {
+            for (; JudgeEventTime(eventTime, board) < 0; idx++)
+            {
+                if (idx < 0 || idx >= fBoard[board]->fChain->GetEntries())
+                    break;
+                fBoard[board]->GetEntry(idx);
+                eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+            }
+            startEntries[board] = idx;
+            for (; JudgeEventTime(eventTime, board) == 0; idx++)
+            {
+                if (idx < 0 || idx >= fBoard[board]->fChain->GetEntries())
+                    break;
+                fBoard[board]->GetEntry(idx);
+                eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+            }
+            endEntries[board] = idx - 1;
+        }
+        else if (JudgeEventTime(eventTime, board) > 0)
+        {
+            for (; JudgeEventTime(eventTime, board) <= 0; idx--)
+            {
+                if (idx < 0 || idx >= fBoard[board]->fChain->GetEntries())
+                    break;
+                fBoard[board]->GetEntry(idx);
+                eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+            }
+            endEntries[board] = idx;
+            for (; JudgeEventTime(eventTime, board) == 0; idx--)
+            {
+                if (idx < 0 || idx >= fBoard[board]->fChain->GetEntries())
+                    break;
+                fBoard[board]->GetEntry(idx);
+                eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+            }
+            startEntries[board] = idx + 1;
+        }
+        else if (JudgeEventTime(eventTime, board) == 0)
+        {
+            for (idx = fCurrentEntries[board]; JudgeEventTime(eventTime, board) == 0; idx--)
+            {
+                if (idx < 0 || idx >= fBoard[board]->fChain->GetEntries())
+                    break;
+                fBoard[board]->GetEntry(idx);
+                eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+            }
+            startEntries[board] = idx + 1;
+            for (idx = fCurrentEntries[board]; JudgeEventTime(eventTime, board) == 0; idx++)
+            {
+                if (idx < 0 || idx >= fBoard[board]->fChain->GetEntries())
+                    break;
+                fBoard[board]->GetEntry(idx);
+                eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+            }
+            startEntries[board] = idx - 1;
+        }
+
+        fCurrentEntries[board] = startEntries[board];
+    }
+    // Match: find how many
+    // for (int)
+    return true;
+}
+
+bool DataMatchManager::MatchEventsInSeg(int *startEntries, int *endEntries)
+{
+    int eventsCount[MAX_BOARD_COUNTS];
+    int judgeCounter[MAX_BOARD_COUNTS]; // how many judge left
+    int idxCount[MAX_BOARD_COUNTS];     // current reading time
+    int maxEventsCount = 0;
+    int maxBoard = 0;
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        eventsCount[board] = endEntries[board] - startEntries[board] + 1;
+        if (eventsCount[board] > maxEventsCount)
+        {
+            maxEventsCount = eventsCount[board];
+            maxBoard = board;
+        }
+
+        fEventEntry[board].clear();
+        fEventTime[board].clear();
+        for (int entry = startEntries[board]; entry <= endEntries[board]; entry++)
+        {
+            fBoard[board]->GetEntry(entry);
+            fEventEntry[board].push_back(entry);
+            fEventTime[board].push_back(fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]]);
+        }
+    }
+    for (int board = 0; board < fBoardCount; board++)
+    {
+        judgeCounter[board] = maxEventsCount - eventsCount[board];
+        if (judgeCounter[board] < 0)
+            judgeCounter[board] = 0;
+        idxCount[board] = 0;
+    }
+
+    for (int idx0 = 0; idx0 < maxEventsCount; idx0++)
+    {
+        fMatchCounter = 0;
+        for (int board = 0; board < fBoardCount; board++)
+        {
+            int &idx = idxCount[board];
+            double maxBoardTime = fEventTime[maxBoard][idx];
+            bool skipFlag = 0;
+            double timeNow;
+            double ctimeNow;
+            double cmaxBoardTime;
+            if (idx >= fEventEntry[board].size())
+            {
+                skipFlag = 1;
+            }
+            else
+            {
+                timeNow = fEventTime[board][idx];
+                ctimeNow = (timeNow - fLastSeg[board]) / fTSInterval[board];
+                cmaxBoardTime = (maxBoardTime - fLastSeg[maxBoard]) / fTSInterval[maxBoard];
+                skipFlag = !(TMath::Abs(ctimeNow - cmaxBoardTime) < 1000e3);
+            }
+            // Judge range: 2000 ns
+            // skipFlag = !(TMath::Abs((ctimeNow - cmaxBoardTime) * 1e9) < 2000);
+            if (judgeCounter[board] > 0)
+            {
+                if (skipFlag)
+                {
+                    fMatchFlag[board] = 0;
+                    judgeCounter[board]--;
+                }
+                else
+                {
+                    fMatchedBoard[fMatchCounter++] = board;
+                    fMatchEntry[board] = fEventEntry[board][idx];
+                    fMatchFlag[board] = 1;
+                    fMatchTime[board] = fEventTime[board][idx];
+                    idx++;
+                }
+            }
+            else
+            {
+                fMatchedBoard[fMatchCounter++] = board;
+                fMatchEntry[board] = fEventEntry[board][idx];
+                fMatchFlag[board] = !skipFlag;
+                fMatchTime[board] = fEventTime[board][idx];
+                idx++;
+            }
+        }
+        if (fMatchTree)
+        {
+            fMatchTree->Fill();
+        }
+    }
+    return true;
+}
+
+void DataMatchManager::MatchBoards()
+{
+    InitiateT0TS();
+    GenerateBoardMap();
+    InitMatchFile();
+    // UpdateSeg(1000);
+    int startEntries[MAX_BOARD_COUNTS], endEntries[MAX_BOARD_COUNTS];
+    double preTime[MAX_BOARD_COUNTS];
+    for (int entry = 0; entry < 1000000; entry++)
+    // for (int entry = 10; entry < 11; entry++)
+    {
+        auto flag = FindAllEventsInSeg(entry, startEntries, endEntries);
+        if (!flag)
+            break;
+        if (entry % 100 == 0)
+            std::cout << entry << std::endl;
+        MatchEventsInSeg(startEntries, endEntries);
+        // for (int board = 0; board < fBoardCount; board++)
+        // {
+        //     // std::cout << (endEntries[board] - startEntries[board] + 1) << '\t';
+        //     // std::cout << startEntries[board] << '-' << endEntries[board] << '\t' << (endEntries[board] - startEntries[board] + 1) << '\t';
+        //     continue;
+        //     std::cout << board << std::endl;
+        //     std::cout << fLastSeg[board] / 1e9 << '\t' << fNextSeg[board] / 1e9 << '\t' << fTSInterval[board] / 1e9 << '\t' << (fNextSeg[board] - fLastSeg[board]) / (fTSInterval[board]) - 1 << std::endl;
+        //     std::cout << startEntries[board] << '\t' << endEntries[board] << std::endl;
+        //     // for (int entries = startEntries[board]; entries <= endEntries[board]; entries++)
+        //     // {
+        //     //     fBoard[board]->GetEntry(entries);
+        //     //     auto eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
+        //     //     // std::cout << eventTime / 1e9 << '\t';
+        //     //     // std::cout << (eventTime - fLastSeg[board]) / fTSInterval[board] << '\t';
+        //     //     double correctedTime = (eventTime - fLastSeg[board]) / fTSInterval[board] * 1e9;
+        //     //     std::cout << Form("%.1f", correctedTime - preTime[board]) << '\t';
+
+        //     //     preTime[board] = correctedTime;
+        //     // }
+        //     // std::cout << std::endl;
+        //     // std::cout << std::endl;
+        // }
+        // std::cout << std::endl;
+    }
+    CloseFile();
 }

@@ -64,6 +64,7 @@ void AlignRuning::startT0Match(QVector<int> *boardArray, QString sInputTxtDir, Q
     }
     // gT0Manager->MatchT0(boardArray, sInputTxtDir.toStdString(), sOutputROOTDir.toStdString());
     emit stopT0Signal(&gT0Manager->GetInsideMatchedCounter());
+    gT0Manager->CloseT0ROOTFile();
 }
 
 Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
@@ -766,6 +767,7 @@ void Mainwindow::handle_T0Done(std::vector<int> *matchedEntries)
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui->tableT0Match->setItem(handle, 6, item);
     }
+    ui->btnStartT0Match->setEnabled(1);
 }
 
 void Mainwindow::on_btnGenerateFileList_clicked()
@@ -926,5 +928,30 @@ void Mainwindow::on_btnT0TSOutputPath_clicked()
 
 void Mainwindow::on_btnStartT0Match_clicked()
 {
+    ui->btnStartT0Match->setEnabled(0);
     emit startT0Request(&fBoardArray, sT0InPath, sT0OutPath);
 }
+
+void Mainwindow::on_btnT0TSFile_clicked()
+{
+
+}
+
+
+void Mainwindow::on_btnBoardPath_clicked()
+{
+
+}
+
+
+void Mainwindow::on_btnReadBoardData_clicked()
+{
+
+}
+
+
+void Mainwindow::on_btnStartBoardMatch_clicked()
+{
+
+}
+
