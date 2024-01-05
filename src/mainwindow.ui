@@ -521,13 +521,6 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
-         <item row="0" column="1">
-          <widget class="QPushButton" name="btnBatchInPath">
-           <property name="text">
-            <string>Choose Path</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="3" rowspan="2">
           <widget class="QPushButton" name="btnGenerateFileList">
            <property name="sizePolicy">
@@ -538,6 +531,13 @@
            </property>
            <property name="text">
             <string>Generate List</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="btnBatchOutPath">
+           <property name="text">
+            <string>Choose Path</string>
            </property>
           </widget>
          </item>
@@ -560,10 +560,17 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="btnBatchOutPath">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Choose Path</string>
+            <string>Output Path:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4" rowspan="2">
+          <widget class="Line" name="line_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
            </property>
           </widget>
          </item>
@@ -593,13 +600,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>Output Path:</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="5" rowspan="2">
           <widget class="QPushButton" name="btnStartBatch">
            <property name="sizePolicy">
@@ -613,10 +613,10 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="4" rowspan="2">
-          <widget class="Line" name="line_4">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="btnBatchInPath">
+           <property name="text">
+            <string>Choose Path</string>
            </property>
           </widget>
          </item>
@@ -764,6 +764,9 @@
       <string>Data Match</string>
      </attribute>
      <layout class="QGridLayout" name="gridLayout_13">
+      <item row="1" column="0">
+       <widget class="QTableWidget" name="tableBoardData"/>
+      </item>
       <item row="0" column="0">
        <widget class="QFrame" name="frame_4">
         <property name="frameShape">
@@ -773,16 +776,17 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_12">
-         <item row="0" column="3" rowspan="2">
-          <widget class="QPushButton" name="btnReadBoardData">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+         <item row="2" column="1">
+          <widget class="QPushButton" name="btnMatchFileDir">
            <property name="text">
-            <string>Generate List</string>
+            <string>Choose Path</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Match File:</string>
            </property>
           </widget>
          </item>
@@ -805,13 +809,6 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="btnT0TSFile">
-           <property name="text">
-            <string>Choose File</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="2">
           <widget class="QLineEdit" name="lineBoardPath">
            <property name="minimumSize">
@@ -831,15 +828,15 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="4" rowspan="2">
-          <widget class="Line" name="line_8">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>Board Path</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="5" rowspan="2">
-          <widget class="QPushButton" name="btnStartBoardMatch">
+         <item row="0" column="3" rowspan="2">
+          <widget class="QPushButton" name="btnReadBoardData">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -847,7 +844,14 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Start Match</string>
+            <string>Generate List</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="btnT0TSFile">
+           <property name="text">
+            <string>Choose File</string>
            </property>
           </widget>
          </item>
@@ -865,18 +869,85 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_21">
+         <item row="2" column="3">
+          <widget class="QLineEdit" name="lblMatchFile">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="text">
-            <string>Board Path</string>
+            <string>MatchEntries.root</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="lineMatchFilePath">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>E:\Data\CRTest-3XY-Detectors\Logic-6&amp;\3\Source</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5" rowspan="2">
+          <widget class="QPushButton" name="btnStartBoardMatch">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Start Match</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4" rowspan="2">
+          <widget class="Line" name="line_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="5">
+          <widget class="QCheckBox" name="cbxDefaultMatchFile">
+           <property name="text">
+            <string>Default</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QTableWidget" name="tableT0Match_3"/>
       </item>
      </layout>
     </widget>

@@ -34,12 +34,19 @@ signals:
     // For T0Match task
     void updateT0Row(int boardIndex, int T0TSCounter, double startT0, double endT0);
     void stopT0Signal(std::vector<int> *matchedEntries);
+
+    // For Data Match Task
+    void stopBoardMatchSignal(int entries);
+
 public slots:
     // For Batch align (Inside board) tasks
     void startAlign(QString sInput, QString sOutput);
 
     // For T0Match task
     void startT0Match(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
+
+    // For Data Match Task
+    void startBoardMatch();
 
 private:
     QString fsFileName;
@@ -92,9 +99,10 @@ private slots:
     void on_lineBatchOutPath_textChanged(const QString &arg1);
 
     void handle_AlignDone(QString sInput, int alignedEntry);
+    void handle_T0Done(std::vector<int> *matchedEntries);
+    void handle_BoardMatchDone(int entries);
     void handle_UpdateRow(QString sInput, int hgEntry, int lgEntry, int tdcEntry);
     void handle_UpdateT0Row(int boardIndex, int T0TSCounter, double startT0, double endT0);
-    void handle_T0Done(std::vector<int> *matchedEntries);
 
     void on_btnGenerateFileList_clicked();
 
@@ -114,9 +122,14 @@ private slots:
 
     void on_btnStartBoardMatch_clicked();
 
+    void on_btnMatchFileDir_clicked();
+
+    void on_cbxDefaultMatchFile_stateChanged(int arg1);
+
 signals:
     void startAlignRequest(QString sInput, QString sOutput);
     void startT0Request(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
+    void startBoardMatchRequest();
 
 private:
     Ui::Mainwindow *ui;
@@ -140,12 +153,23 @@ private:
 
     // Batch Align
     QString sBatchInPath = "", sBatchOutPath = "";
+    bool fBatchInFlag = 0, fBatchOutFlag = 0;
     QStringList sInFileList, sOutFileList;
 
     // T0 Match
     QString sT0InPath = "E:\\Data\\CRTest-3XY-Detectors\\Logic-6&\\3\\Source", sT0OutPath = "";
     QStringList sT0InList, sT0OutList;
-    QVector<int> fBoardArray;
+    bool fT0InFlag = 0, fT0OutFlag = 0;
+    QVector<int> fT0BoardArray;
+
+    // Data match
+    QString sT0ROOTFile = "E:\\Data\\CRTest-3XY-Detectors\\Logic-6&\\3\\Source\\TS.root";
+    QString sBoardDataPath = "E:\\Data\\CRTest-3XY-Detectors\\Logic-6&\\3\\Processed\\";
+    QString sMatchPath = "";
+    QString sMatchFile = "MatchEntries.root";
+    bool fT0ROOTFlag = 0, fBoardDataFlag = 0, fDefaultMatchFileFlag = 1;
+    QStringList sBoardDataList;
+    QVector<int> fDataBoardArray;
 
     // Align Manager Thread
     AlignRuning *fAlignWorker;

@@ -464,6 +464,8 @@ void DataMatchManager::CloseFile()
     fBoardArrayInitFlag = 0;
     fT0Flag = 0;
     fBoardFlag = 0;
+    fOutFlag = 0;
+    fMatchedFlag = 0;
 }
 
 bool DataMatchManager::JudgeBoardFlag(bool *flags, int boardNumber)
@@ -571,6 +573,11 @@ bool DataMatchManager::InitiateT0TS(std::string sT0TSFile)
     if (fT0Flag)
         return false;
     fTS = new ROOTTrees::tsTree(sT0TSFile.c_str());
+    if (!fTS->fChain)
+    {
+        fT0Flag = 0;
+        return false;
+    }
     fT0Flag = 1;
 
     UpdateInterval(0);
@@ -668,13 +675,27 @@ bool DataMatchManager::GenerateBoardMap(std::string sBoardDataFolder)
     for (int i = 0; i < fBoardCount; i++)
         fBoard[i] = new ROOTTrees::board(Form("%s/Board%d-Aligned.root", fsBoardDataFolder.c_str(), fBoardArray[i]));
 
+    for (int i = 0; i < fBoardCount; i++)
+        if (!fBoard[i]->fChain)
+        {
+            fBoardFlag = 0;
+            return false;
+        }
+
     fBoardFlag = 1;
     return true;
 }
 
-void DataMatchManager::InitMatchFile()
+bool DataMatchManager::InitMatchFile(std::string sOutputFile)
 {
-    fMatchFile = new TFile("MatchEntries.root", "recreate");
+    if (fOutFlag)
+        return false;
+    fMatchFile = new TFile(sOutputFile.c_str(), "recreate");
+    if (!fMatchFile->IsWritable())
+    {
+        fOutFlag = 0;
+        return false;
+    }
     fMatchTree = new TTree("match", "matched entries");
     fMatchTree->Branch("counter", &fMatchCounter, "counter/I");
     fMatchTree->Branch("matchedBoard", fMatchedBoard, "matchedBoard[counter]/I");
@@ -700,6 +721,8 @@ void DataMatchManager::InitMatchFile()
         boardNo = fBoardArray[i];
         fBNTree->Fill();
     }
+    fOutFlag = 1;
+    return true;
 }
 
 int DataMatchManager::JudgeEventTime(double eventTime, int boardNo)
@@ -876,15 +899,16 @@ bool DataMatchManager::MatchEventsInSeg(int *startEntries, int *endEntries)
     return true;
 }
 
-void DataMatchManager::MatchBoards()
+int DataMatchManager::DoMatch()
 {
-    InitiateT0TS();
-    GenerateBoardMap();
-    InitMatchFile();
-    // UpdateSeg(1000);
+    if (!ReadyForMatch())
+        return 0;
+    if (fMatchedFlag)
+        return 0;
+
     int startEntries[MAX_BOARD_COUNTS], endEntries[MAX_BOARD_COUNTS];
     double preTime[MAX_BOARD_COUNTS];
-    for (int entry = 0; entry < 1000000; entry++)
+    for (int entry = 0; entry < fTS->fChain->GetEntries(); entry++)
     // for (int entry = 10; entry < 11; entry++)
     {
         auto flag = FindAllEventsInSeg(entry, startEntries, endEntries);
@@ -893,29 +917,23 @@ void DataMatchManager::MatchBoards()
         if (entry % 100 == 0)
             std::cout << entry << std::endl;
         MatchEventsInSeg(startEntries, endEntries);
-        // for (int board = 0; board < fBoardCount; board++)
-        // {
-        //     // std::cout << (endEntries[board] - startEntries[board] + 1) << '\t';
-        //     // std::cout << startEntries[board] << '-' << endEntries[board] << '\t' << (endEntries[board] - startEntries[board] + 1) << '\t';
-        //     continue;
-        //     std::cout << board << std::endl;
-        //     std::cout << fLastSeg[board] / 1e9 << '\t' << fNextSeg[board] / 1e9 << '\t' << fTSInterval[board] / 1e9 << '\t' << (fNextSeg[board] - fLastSeg[board]) / (fTSInterval[board]) - 1 << std::endl;
-        //     std::cout << startEntries[board] << '\t' << endEntries[board] << std::endl;
-        //     // for (int entries = startEntries[board]; entries <= endEntries[board]; entries++)
-        //     // {
-        //     //     fBoard[board]->GetEntry(entries);
-        //     //     auto eventTime = fBoard[board]->TDCTime[fBoard[board]->FiredCh[0]];
-        //     //     // std::cout << eventTime / 1e9 << '\t';
-        //     //     // std::cout << (eventTime - fLastSeg[board]) / fTSInterval[board] << '\t';
-        //     //     double correctedTime = (eventTime - fLastSeg[board]) / fTSInterval[board] * 1e9;
-        //     //     std::cout << Form("%.1f", correctedTime - preTime[board]) << '\t';
-
-        //     //     preTime[board] = correctedTime;
-        //     // }
-        //     // std::cout << std::endl;
-        //     // std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
     }
+    fMatchedFlag = 1;
+    return fMatchTree->GetEntries();
+}
+
+void DataMatchManager::DoInitiate(std::string sT0File, std::string sBoardFolder, std::string sOutputFile)
+{
     CloseFile();
+    InitiateT0TS(sT0File);
+    GenerateBoardMap(sBoardFolder);
+    InitMatchFile(sOutputFile);
+}
+
+int DataMatchManager::MatchBoards(std::string sT0File, std::string sBoardFolder, std::string sOutputFile)
+{
+    DoInitiate(sT0File, sBoardFolder, sOutputFile);
+    auto entries = DoMatch();
+    CloseFile();
+    return entries;
 }

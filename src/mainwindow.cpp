@@ -67,6 +67,13 @@ void AlignRuning::startT0Match(QVector<int> *boardArray, QString sInputTxtDir, Q
     gT0Manager->CloseT0ROOTFile();
 }
 
+void AlignRuning::startBoardMatch()
+{
+    auto entries = gDataMatchManager->DoMatch();
+    emit stopBoardMatchSignal(entries);
+    gDataMatchManager->CloseFile();
+}
+
 Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::Mainwindow)
 {
@@ -176,6 +183,40 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     ui->tableT0Match->setColumnWidth(5, 75);
     ui->tableT0Match->setColumnWidth(6, 75);
 
+    // Setting Board Data Table
+    on_cbxDefaultMatchFile_stateChanged(Qt::CheckState::Checked);
+    ui->btnStartBoardMatch->setEnabled(0);
+
+    QTableWidgetItem *boardDataHeader;
+    QStringList boardDataText;
+    boardDataText
+        << "Board No"
+        << "File Name"
+        << "Entries"
+        << "First"
+        << "Last"
+        << "Matched Entries";
+    ui->tableBoardData->setColumnCount(boardDataText.count());
+
+    for (int i = 0; i < ui->tableBoardData->columnCount(); i++)
+    {
+        boardDataHeader = new QTableWidgetItem(boardDataText.at(i));
+        QFont font = boardDataHeader->font();
+        font.setBold(true);
+        font.setPointSize(12);
+        boardDataHeader->setFont(font);
+        ui->tableBoardData->setHorizontalHeaderItem(i, boardDataHeader);
+    }
+    ui->tableBoardData->verticalHeader()->setVisible(0);
+    ui->tableBoardData->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableBoardData->setColumnWidth(0, 50);
+    ui->tableBoardData->setColumnWidth(1, 200);
+    ui->tableBoardData->setColumnWidth(2, 75);
+    ui->tableBoardData->setColumnWidth(3, 75);
+    ui->tableBoardData->setColumnWidth(4, 75);
+    ui->tableBoardData->setColumnWidth(5, 75);
+    ui->tableBoardData->setColumnWidth(6, 75);
+
     // Setting ui
     ui->btnCloseFile->setEnabled(0);
     ui->btnCloseOutputFile->setEnabled(0);
@@ -187,10 +228,12 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     fAlignWorker->moveToThread(&fWorkThread);
     connect(this, &Mainwindow::startAlignRequest, fAlignWorker, &AlignRuning::startAlign);
     connect(this, &Mainwindow::startT0Request, fAlignWorker, &AlignRuning::startT0Match);
+    connect(this, &Mainwindow::startBoardMatchRequest, fAlignWorker, &AlignRuning::startBoardMatch);
     connect(fAlignWorker, &AlignRuning::stopAlignSignal, this, &Mainwindow::handle_AlignDone);
+    connect(fAlignWorker, &AlignRuning::stopT0Signal, this, &Mainwindow::handle_T0Done);
+    connect(fAlignWorker, &AlignRuning::stopBoardMatchSignal, this, &Mainwindow::handle_BoardMatchDone);
     connect(fAlignWorker, &AlignRuning::updateRowSignal, this, &Mainwindow::handle_UpdateRow);
     connect(fAlignWorker, &AlignRuning::updateT0Row, this, &Mainwindow::handle_UpdateT0Row);
-    connect(fAlignWorker, &AlignRuning::stopT0Signal, this, &Mainwindow::handle_T0Done);
     connect(&fWorkThread, &QThread::finished, fAlignWorker, &QObject::deleteLater);
     fWorkThread.start();
 }
@@ -607,7 +650,15 @@ void Mainwindow::on_btnBatchInPath_clicked()
 {
     if (sBatchInPath == "")
         sBatchInPath = sCurrentPath;
-    sBatchInPath = QFileDialog::getExistingDirectory(this, "Choose Batch Align Input Path.", sBatchInPath);
+    auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Input Path.", sBatchInPath);
+    if (tempString == "")
+    {
+        fBatchInFlag = 0;
+        ui->lineBatchInPath->setText("");
+        return;
+    }
+    sBatchInPath = tempString;
+    fBatchInFlag = 1;
     ui->lineBatchInPath->setText(sBatchInPath);
 }
 
@@ -615,7 +666,15 @@ void Mainwindow::on_btnBatchOutPath_clicked()
 {
     if (sBatchOutPath == "")
         sBatchOutPath = sBatchInPath;
-    sBatchOutPath = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sBatchOutPath);
+    auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sBatchOutPath);
+    if (tempString == "")
+    {
+        fBatchOutFlag = 0;
+        ui->lineBatchOutPath->setText("");
+        return;
+    }
+    sBatchOutPath = tempString;
+    fBatchOutFlag = 1;
     ui->lineBatchOutPath->setText(sBatchOutPath);
 }
 
@@ -770,10 +829,16 @@ void Mainwindow::handle_T0Done(std::vector<int> *matchedEntries)
     ui->btnStartT0Match->setEnabled(1);
 }
 
+void Mainwindow::handle_BoardMatchDone(int entries)
+{
+    // ui->btnStartBoardMatch->setEnabled(1);
+    ui->btnReadBoardData->setEnabled(1);
+}
+
 void Mainwindow::on_btnGenerateFileList_clicked()
 {
     // Verify path
-    if (sBatchInPath == "" || sBatchOutPath == "")
+    if (!fBatchInFlag || !fBatchOutFlag)
         return;
 
     QDir dir(sBatchInPath);
@@ -847,7 +912,7 @@ QString ProcessT0OutputName(QString sInput, int &boardNo)
 void Mainwindow::on_btnReadT0Files_clicked()
 {
     // Verify path
-    if (sT0InPath == "" || sT0OutPath == "")
+    if (!fT0InFlag || !fT0OutFlag)
         return;
 
     QDir dir(sT0InPath);
@@ -871,14 +936,10 @@ void Mainwindow::on_btnReadT0Files_clicked()
         return;
     }
 
-    // Close all file in test align mode
-    on_btnCloseFile_clicked();
-    on_btnCloseOutputFile_clicked();
-
     QTableWidgetItem *item;
     ui->tableT0Match->clearContents();
     ui->tableT0Match->setRowCount(sT0InList.size());
-    fBoardArray.clear();
+    fT0BoardArray.clear();
     for (int i = 0; i < sT0InList.size(); i++)
     {
         auto filename = sT0InList.at(i);
@@ -899,7 +960,7 @@ void Mainwindow::on_btnReadT0Files_clicked()
         item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui->tableT0Match->setItem(i, 0, item);
 
-        fBoardArray.push_back(boardNo);
+        fT0BoardArray.push_back(boardNo);
 
         // Add Full Path in Inside List
         sT0InList[i] = sT0InPath + "/" + sT0InList[i];
@@ -912,9 +973,17 @@ void Mainwindow::on_btnT0TSInputPath_clicked()
 {
     if (sT0InPath == "")
         sT0InPath = sCurrentPath;
-    sT0InPath = QFileDialog::getExistingDirectory(this, "Choose Batch Align Input Path.", sT0InPath);
+    auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Input Path.", sT0InPath);
+    if (tempString == "")
+    {
+        fT0InFlag = 0;
+        ui->lineT0InPath->setText("");
+        return;
+    }
+    sT0InPath = tempString;
     if (sT0InPath != "" && sT0OutPath == "")
         sT0OutPath = sT0InPath;
+    fT0InFlag = 1;
     ui->lineT0InPath->setText(sT0InPath);
 }
 
@@ -922,36 +991,187 @@ void Mainwindow::on_btnT0TSOutputPath_clicked()
 {
     if (sT0OutPath == "")
         sT0OutPath = sT0InPath;
-    sT0OutPath = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sT0OutPath);
+    auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sT0OutPath);
+    if (tempString == "")
+    {
+        fT0OutFlag = 0;
+        ui->lineT0OutPath->setText("");
+        return;
+    }
+    sT0OutPath = tempString;
     ui->lineT0OutPath->setText(sT0OutPath);
+    fT0OutFlag = 1;
 }
 
 void Mainwindow::on_btnStartT0Match_clicked()
 {
     ui->btnStartT0Match->setEnabled(0);
-    emit startT0Request(&fBoardArray, sT0InPath, sT0OutPath);
+    emit startT0Request(&fT0BoardArray, sT0InPath, sT0OutPath);
 }
 
 void Mainwindow::on_btnT0TSFile_clicked()
 {
-
+    if (sT0ROOTFile == "")
+        sT0ROOTFile = sCurrentPath;
+    auto tempString = QFileDialog::getOpenFileName(this, "Choose Batch Align Input Path.", sT0ROOTFile, "TS*.root");
+    if (tempString == "")
+    {
+        fT0ROOTFlag = 0;
+        ui->lineTSFile->setText("");
+        return;
+    }
+    sT0ROOTFile = tempString;
+    sBoardDataPath = sT0ROOTFile + "/../../Processed/";
+    ui->lineTSFile->setText(sT0ROOTFile);
+    fT0ROOTFlag = 1;
 }
-
 
 void Mainwindow::on_btnBoardPath_clicked()
 {
+    if (sBoardDataPath == "")
+        sBoardDataPath = sT0ROOTFile + "/../../Processed/";
+    auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sBoardDataPath);
+    if (tempString == "")
+    {
+        fBoardDataFlag = 0;
+        ui->lineBoardPath->setText("");
+        return;
+    }
+    sBoardDataPath = tempString;
+    ui->lineBoardPath->setText(sBoardDataPath);
+    fBoardDataFlag = 1;
 
+    if (fDefaultMatchFileFlag)
+    {
+        sMatchPath = sBoardDataPath;
+        sMatchFile = "MatchEntries.root";
+        ui->lineMatchFilePath->setText(sMatchPath);
+        ui->lblMatchFile->setText(sMatchFile);
+    }
 }
 
+int ProcessBoardDataFileName(QString sInput, int &boardNo, QString sPath = "./")
+{
+    auto filename = sInput.mid(0, sInput.size() - QString(".root").size());
+
+    bool fTimeStampFlag = 0;
+    //  + QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") + ".root";
+
+    auto sBoardNo = filename.mid(QString("Board").size(), filename.size() - QString("Board-Aligned").size());
+    boardNo = sBoardNo.toInt();
+
+    int entries = 0;
+    TFile f((sPath + "/" + sInput).toLocal8Bit().data());
+    auto tree = (TTree *)f.Get("board");
+    if (tree)
+        entries = tree->GetEntries();
+    return entries;
+}
 
 void Mainwindow::on_btnReadBoardData_clicked()
 {
+    // Verify path
+    if (!fT0ROOTFlag || !fBoardDataFlag)
+        return;
+    if (!fDefaultMatchFileFlag)
+        sMatchFile = ui->lblMatchFile->text();
 
+    QDir dir(sBoardDataPath);
+    QStringList nameFilters;
+    nameFilters << "Board*-Aligned.root";
+
+    sBoardDataList = dir.entryList(nameFilters, QDir::Files | QDir::Readable, QDir::Name);
+    if (sBoardDataList.size() == 0)
+    {
+        QString text = "Find no file in " + sBoardDataPath;
+        QMessageBox::information(this, "Error while open File.", text, QMessageBox::Ok, QMessageBox::Cancel);
+        return;
+    }
+
+    // Set table for Board Data
+    QTableWidgetItem *item;
+    ui->tableBoardData->clearContents();
+    ui->tableBoardData->setRowCount(sBoardDataList.size());
+    fDataBoardArray.clear();
+    for (int i = 0; i < sBoardDataList.size(); i++)
+    {
+        auto filename = sBoardDataList.at(i);
+
+        item = new QTableWidgetItem(filename);
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableBoardData->setItem(i, 1, item);
+        // std::cout << sBoardDataList.at(i).toStdString() << std::endl;
+
+        int boardNo;
+        int entries = ProcessBoardDataFileName(filename, boardNo, sBoardDataPath);
+
+        item = new QTableWidgetItem(QString::number(boardNo));
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableBoardData->setItem(i, 0, item);
+
+        item = new QTableWidgetItem(QString::number(entries));
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableBoardData->setItem(i, 2, item);
+
+        fDataBoardArray.push_back(boardNo);
+
+        // Add Full Path in Inside List
+        sBoardDataList[i] = sBoardDataPath + "/" + sBoardDataList[i];
+        // std::cout << ProcessRAWDataOutputName(filename).toStdString() << std::endl;
+    }
+
+    gDataMatchManager->DoInitiate(sT0ROOTFile.toStdString(), sBoardDataPath.toStdString(), (sMatchPath + "/" + sMatchFile).toStdString());
+    if (gDataMatchManager->ReadyForMatch())
+    {
+        ui->btnReadBoardData->setEnabled(0);
+        ui->btnStartBoardMatch->setEnabled(1);
+    }
 }
-
 
 void Mainwindow::on_btnStartBoardMatch_clicked()
 {
-
+    ui->btnStartBoardMatch->setEnabled(0);
+    emit startBoardMatchRequest();
 }
 
+void Mainwindow::on_btnMatchFileDir_clicked()
+{
+    if (sMatchPath == "")
+        sMatchPath = sBoardDataPath;
+    auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sMatchPath);
+    if (tempString == "")
+    {
+        ui->lineBoardPath->setText("");
+        return;
+    }
+    sMatchPath = tempString;
+    ui->lineMatchFilePath->setText(sMatchPath);
+}
+
+void Mainwindow::on_cbxDefaultMatchFile_stateChanged(int arg1)
+{
+    if (arg1 == Qt::CheckState::Checked)
+    {
+        sMatchPath = sBoardDataPath;
+        sMatchFile = "MatchEntries.root";
+        ui->lineMatchFilePath->setText(sMatchPath);
+        ui->lblMatchFile->setText(sMatchFile);
+        fDefaultMatchFileFlag = 1;
+
+        ui->lineMatchFilePath->setEnabled(0);
+        ui->lblMatchFile->setEnabled(0);
+        ui->btnMatchFileDir->setEnabled(0);
+
+        ui->cbxDefaultMatchFile->setCheckState(Qt::CheckState::Checked);
+    }
+    else if (arg1 == Qt::CheckState::Unchecked)
+    {
+        fDefaultMatchFileFlag = 0;
+
+        ui->lineMatchFilePath->setEnabled(1);
+        ui->lblMatchFile->setEnabled(1);
+        ui->btnMatchFileDir->setEnabled(1);
+
+        ui->cbxDefaultMatchFile->setCheckState(Qt::CheckState::Unchecked);
+    }
+}

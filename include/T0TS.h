@@ -85,6 +85,7 @@ private:
     std::vector<int> fMatchedCounter;
 };
 
+#define gDataMatchManager (DataMatchManager::Instance())
 class DataMatchManager
 {
 public:
@@ -123,7 +124,7 @@ public:
     bool GenerateBoardMap(std::string sBoardDataFolder = "./");
 
     /// @brief Initiate Board Matching file
-    void InitMatchFile();
+    bool InitMatchFile(std::string sOutputFile = "./MatchEntries.root");
 
     /// @brief judge whether event time is inside interval
     /// @param eventTime
@@ -144,7 +145,10 @@ public:
     /// @return
     bool MatchEventsInSeg(int *startEntries, int *endEntries);
 
-    void MatchBoards();
+    bool ReadyForMatch() { return fT0Flag && fBoardFlag && fOutFlag; };
+    void DoInitiate(std::string sT0File = "./TS.root", std::string sBoardFolder = "../Processed/", std::string sOutputFile = "../Processed/MatchEntries.root");
+    int DoMatch();
+    int MatchBoards(std::string sT0File = "./TS.root", std::string sBoardFolder = "../Processed/", std::string sOutputFile = "../Processed/MatchEntries.root");
 
 private:
     bool fBoardArrayInitFlag = 0;
@@ -180,6 +184,7 @@ private:
     TFile *fMatchFile = NULL;
     TTree *fMatchTree = NULL;
     TTree *fBNTree = NULL;
+    bool fOutFlag = 0;
 
     int fMatchCounter;                       // restore match counter
     int fMatchedBoard[MAX_BOARD_COUNTS];     // restore matched channel
@@ -189,9 +194,12 @@ private:
 
     uint64_t fCurrentEntries[MAX_BOARD_COUNTS]{0}; // Current reading entries
     double fT0Delay[MAX_BOARD_COUNTS];             // Restore T0Delay for each board, set board 0 at 0
+    bool fMatchedFlag = 0;
 
     std::vector<double> fEventTime[MAX_BOARD_COUNTS];
     std::vector<int> fEventEntry[MAX_BOARD_COUNTS];
+
+    DataMatchManager() = default;
 };
 
 #endif
