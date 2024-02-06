@@ -146,9 +146,9 @@ public:
     bool MatchEventsInSeg(int *startEntries, int *endEntries);
 
     bool ReadyForMatch() { return fT0Flag && fBoardFlag && fOutFlag; };
-    void DoInitiate(std::string sT0File = "./TS.root", std::string sBoardFolder = "../Processed/", std::string sOutputFile = "../Processed/MatchEntries.root");
+    void DoInitiate(std::vector<int> vBoard, std::string sT0File = "./TS.root", std::string sBoardFolder = "../Processed/", std::string sOutputFile = "../Processed/MatchEntries.root");
     int DoMatch();
-    int MatchBoards(std::string sT0File = "./TS.root", std::string sBoardFolder = "../Processed/", std::string sOutputFile = "../Processed/MatchEntries.root");
+    int MatchBoards(std::vector<int> vBoard, std::string sT0File = "./TS.root", std::string sBoardFolder = "../Processed/", std::string sOutputFile = "../Processed/MatchEntries.root");
 
 private:
     bool fBoardArrayInitFlag = 0;
@@ -163,15 +163,9 @@ private:
     double fNextSeg2[MAX_BOARD_COUNTS]; // Same use with gLastTS
 
     // Initate Segment
-    double fT0TSInterval2[MAX_BOARD_COUNTS];
-    double fT0TSStart2[MAX_BOARD_COUNTS];
     ROOTTrees::tsTree *fTS = NULL;
     std::string fsT0TSFile = "";
     bool fT0Flag = 0;
-
-    // Used for calculating interval and segpoint
-    double fCurrentValidInterval[MAX_BOARD_COUNTS]; // Update valid interval real time
-    double fCurrentValidSegPoint[MAX_BOARD_COUNTS]; // Update valid seg point real time
 
     // Each Board information
     int fBoardCount = 0;

@@ -64,9 +64,9 @@ namespace ROOTTrees
         // Declaration of leaf types
         UInt_t tsid;
         UChar_t tsBoardCount;
-        UChar_t tsBoardStat[6]; //[tsBoardCount]
-        Double_t ts[6];
-        UChar_t tsFlag[6];
+        UChar_t tsBoardStat[32]; //[tsBoardCount]
+        Double_t ts[32];
+        UChar_t tsFlag[32];
 
         // List of branches
         TBranch *b_tsid;         //!

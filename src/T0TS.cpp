@@ -238,6 +238,10 @@ bool BoardT0Manager::InitT0Matching(std::string sFileName)
             return false;
         }
         fInTrees[i]->SetBranchAddress("ts", &fInTS[i]);
+
+        fPreEntry[i] = 0;
+        fPreTS[i] = 0;
+        fUnmatchedCum[i] = 0;
     }
 
     return true;
@@ -338,7 +342,7 @@ bool BoardT0Manager::SaveNextTS()
             fTS[board] = fPreTS[board] + fUnmatchedCum[board];
             // std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (TMath::Abs(fTSDev[board] - minDev) < TS_JUDGE_RANGE) << std::endl;
             // std::cout << std::setprecision(10) << gInsideEntry << '\t' << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
-            std::cout << std::setprecision(1) << board << std::setprecision(10) << '\t' << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
+            std::cout << "Unmatched: " << std::setprecision(1) << board << '\t' << std::setprecision(10) << fPreEntry[board] << '\t' << (bool)fTSFlag[board] << '\t' << "N:" << fInTS[board] / 1e9 << '\t' << fPreTS[board] / 1e9 << '\t' << fUnmatchedCum[board] / 1e9 << '\t' << fTSDev[board] / 1e9 << '\t' << minDev / 1e9 << '\t' << (fTSDev[board] - minDev) / 1e9 << std::endl;
         }
         // std::cout << board << '\t' << minDev << '\t' << fTSDev[board] << '\t' << fTSDev[board] - minDev - fUnmatchedCum[board] << std::endl;
     }
@@ -375,6 +379,7 @@ bool BoardT0Manager::FindBegining()
 
 bool BoardT0Manager::Try_FindBegining(double AbsTimeStamp)
 {
+    // Easy to get infinite loop here, because if not find at first, then it will compare all elements for all boards
     for (int board = 0; board < fBoardCount; board++)
     {
         bool flag = 0;
@@ -383,7 +388,7 @@ bool BoardT0Manager::Try_FindBegining(double AbsTimeStamp)
             fInTrees[board]->GetEntry(entry);
             // time deviation less than 0.2s
             // std::cout << entry << '\t' << board << '\t' << AbsTimeStamp / 1e9 << '\t' << (fInTS[board] - AbsTimeStamp) / 1e9 << std::endl;
-            if (TMath::Abs(fInTS[board] - AbsTimeStamp) < 0.1e9)
+            if (TMath::Abs(fInTS[board] - AbsTimeStamp) < 0.9e9)
             {
                 flag = 1;
                 fPreEntry[board] = entry;
@@ -545,11 +550,6 @@ bool DataMatchManager::UpdateInterval(int startEntry)
 #endif
                 devCount[board] = 0;
                 tsPre[board] = fTS->ts[board];
-                if (TMath::Abs(fTSInterval[board] / fT0TSInterval2[board] - 1) * 1e6 < 1)
-                {
-                    fCurrentValidInterval[board] = fTSInterval[board];
-                    fCurrentValidSegPoint[board] = fTS->ts[board];
-                }
             }
             else
             {
@@ -589,47 +589,6 @@ bool DataMatchManager::InitiateT0TS(std::string sT0TSFile)
     {
         fLastSeg[board] = fTS->ts[board];
         std::cout << "Board index: " << board << '\t' << "First Time stamp(s): " << '\t' << fLastSeg[board] / 1e9 << '\t' << " Time Interval(s): " << fTSInterval[board] / 1e9 << '\t' << std::endl;
-
-        int startIdx = 30;
-        int endIdx = fTS->fChain->GetEntries() - 100;
-        // int endIdx = 100;
-        // int endIdx = 1020;
-        double ts1, ts2;
-        for (; startIdx < fTS->fChain->GetEntries(); startIdx++)
-        {
-            fTS->fChain->GetEntry(startIdx);
-            if (fTS->tsFlag[board])
-                break;
-        }
-        ts1 = fTS->ts[board];
-
-        for (; endIdx > 0; endIdx--)
-        {
-            fTS->fChain->GetEntry(endIdx);
-            if (fTS->tsFlag[board])
-                break;
-        }
-        ts2 = fTS->ts[board];
-        int clockCount = 0;
-        double tsPre, tsNow;
-        fTS->GetEntry(startIdx);
-        tsPre = fTS->ts[board];
-        for (int idx = startIdx + 1; idx <= endIdx; idx++)
-        {
-            fTS->GetEntry(idx);
-            tsNow = fTS->ts[board];
-            double dev = tsNow - tsPre;
-            clockCount += round(dev / 1e9);
-            // std::cout << dev << '\t' << round(dev / 1e9) << std::endl;
-            tsPre = tsNow;
-        }
-        // fT0TSInterval2[board] = (ts2 - ts1) / (endIdx - startIdx);
-        fT0TSInterval2[board] = (ts2 - ts1) / clockCount;
-        fT0TSStart2[board] = (ts1 - startIdx * fT0TSInterval2[board]);
-        fCurrentValidInterval[board] = fT0TSInterval2[board];
-        fCurrentValidSegPoint[board] = fT0TSStart2[board];
-        std::cout << "startIdx: " << startIdx << " endIdx: " << endIdx << " count: " << clockCount << " interval: " << fT0TSInterval2[board] << std::endl
-                  << std::endl;
     }
     return true;
 }
@@ -653,12 +612,6 @@ bool DataMatchManager::UpdateSegPoint(int startEntry)
     else
         for (int board = 0; board < fBoardCount; board++)
             fNextSeg[board] = fLastSeg[board] + fTSInterval[board];
-
-    for (int board = 0; board < fBoardCount; board++)
-    {
-        fLastSeg2[board] = round((fLastSeg[board] - fCurrentValidSegPoint[board]) / fCurrentValidInterval[board]) * fCurrentValidInterval[board] + fCurrentValidSegPoint[board];
-        fNextSeg2[board] = round((fNextSeg[board] - fCurrentValidSegPoint[board]) / fCurrentValidInterval[board]) * fCurrentValidInterval[board] + fCurrentValidSegPoint[board];
-    }
 
     // std::cout << "Segment: " << startEntry << '\t';
     // for (int board = 0; board < fBoardCount; board++)
@@ -704,12 +657,7 @@ bool DataMatchManager::InitMatchFile(std::string sOutputFile)
     fMatchTree->Branch("matchTime", fMatchTime, Form("matchTime[%d]/D", fBoardCount));
     fMatchTree->Branch("lastSeg", fLastSeg, Form("lastSeg[%d]/D", fBoardCount));
     fMatchTree->Branch("nextSeg", fNextSeg, Form("nextSeg[%d]/D", fBoardCount));
-    fMatchTree->Branch("lastSeg2", fLastSeg2, Form("lastSeg2[%d]/D", fBoardCount));
-    fMatchTree->Branch("nextSeg2", fNextSeg2, Form("nextSeg2[%d]/D", fBoardCount));
     fMatchTree->Branch("interval", fTSInterval, Form("interval[%d]/D", fBoardCount));
-    fMatchTree->Branch("interval2", fT0TSInterval2, Form("interval2[%d]/D", fBoardCount));
-    fMatchTree->Branch("currentInterval", fCurrentValidInterval, Form("currentInterval[%d]/D", fBoardCount));
-    fMatchTree->Branch("currentSegPoint", fCurrentValidSegPoint, Form("currentSegPoint[%d]/D", fBoardCount));
     fMatchTree->AutoSave();
 
     // Save board number information
@@ -818,6 +766,7 @@ bool DataMatchManager::MatchEventsInSeg(int *startEntries, int *endEntries)
     int maxBoard = 0;
     for (int board = 0; board < fBoardCount; board++)
     {
+        // std::cout << "John Debug: " << startEntries[board] << '\t' << endEntries[board] << std::endl;
         eventsCount[board] = endEntries[board] - startEntries[board] + 1;
         if (eventsCount[board] > maxEventsCount)
         {
@@ -922,17 +871,18 @@ int DataMatchManager::DoMatch()
     return fMatchTree->GetEntries();
 }
 
-void DataMatchManager::DoInitiate(std::string sT0File, std::string sBoardFolder, std::string sOutputFile)
+void DataMatchManager::DoInitiate(std::vector<int> vBoard, std::string sT0File, std::string sBoardFolder, std::string sOutputFile)
 {
     CloseFile();
+    InitBoardArray(vBoard);
     InitiateT0TS(sT0File);
     GenerateBoardMap(sBoardFolder);
     InitMatchFile(sOutputFile);
 }
 
-int DataMatchManager::MatchBoards(std::string sT0File, std::string sBoardFolder, std::string sOutputFile)
+int DataMatchManager::MatchBoards(std::vector<int> vBoard, std::string sT0File, std::string sBoardFolder, std::string sOutputFile)
 {
-    DoInitiate(sT0File, sBoardFolder, sOutputFile);
+    DoInitiate(vBoard, sT0File, sBoardFolder, sOutputFile);
     auto entries = DoMatch();
     CloseFile();
     return entries;

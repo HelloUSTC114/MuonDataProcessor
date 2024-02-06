@@ -833,6 +833,14 @@ void Mainwindow::handle_BoardMatchDone(int entries)
 {
     // ui->btnStartBoardMatch->setEnabled(1);
     ui->btnReadBoardData->setEnabled(1);
+
+    QTableWidgetItem *item;
+    for (int i = 0; i < sBoardDataList.size(); i++)
+    {
+        item = new QTableWidgetItem(QString::number(entries));
+        item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui->tableBoardData->setItem(i, 5, item);
+    }
 }
 
 void Mainwindow::on_btnGenerateFileList_clicked()
@@ -1120,7 +1128,7 @@ void Mainwindow::on_btnReadBoardData_clicked()
         // std::cout << ProcessRAWDataOutputName(filename).toStdString() << std::endl;
     }
 
-    gDataMatchManager->DoInitiate(sT0ROOTFile.toStdString(), sBoardDataPath.toStdString(), (sMatchPath + "/" + sMatchFile).toStdString());
+    gDataMatchManager->DoInitiate(fDataBoardArray.toStdVector(), sT0ROOTFile.toStdString(), sBoardDataPath.toStdString(), (sMatchPath + "/" + sMatchFile).toStdString());
     if (gDataMatchManager->ReadyForMatch())
     {
         ui->btnReadBoardData->setEnabled(0);
