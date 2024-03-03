@@ -1,6 +1,7 @@
 #include "T0TS.h"
 
 #include <QDir>
+#include <QDebug>
 
 #define TS_JUDGE_RANGE (2e8)
 
@@ -77,18 +78,72 @@ namespace T0Process
         fin.open(sInfile.c_str());
         double preTS = 0;
         int counter = 0;
+        int sgMultiReadCount = 0;
+        double sgMultiReadTS[5];
+        uint32_t sgCurrentID = 0;
+        int sgCurrentDev;
+        int boardID;
+        int iddev;
+        double tsTemp;
+
         for (int row = 0; fin.is_open() && !fin.eof() && fin.good(); row++)
         {
-            int boardID;
-            int iddev;
-            double tsTemp;
             fin >> boardID >> iddev >> tsTemp;
+            // if iddev > 1, judge whether it is a multi read
+            if (iddev > 1)
+            {
+                if (sgMultiReadCount == 0)
+                {
+                    sgCurrentID = boardID;
+                    sgCurrentDev = iddev;
+                }
+                // Judge whether it's an old multi read
+                if (sgCurrentID == boardID)
+                {
+                    sgMultiReadTS[sgMultiReadCount] = tsTemp;
+                    sgMultiReadCount++;
+                    continue;
+                }
+            }
+            // Process old multi read
+            if (sgMultiReadCount > 0)
+            {
+                for (int idx = 0; idx < sgMultiReadCount; idx++)
+                {
+                    tsid = sgCurrentID - (sgMultiReadCount - 1) + idx;
+                    ts = sgMultiReadTS[idx];
+
+                    double sgTSDev = TMath::Abs(sgMultiReadTS[idx] - sgMultiReadTS[idx + 1]);
+                    if (idx < sgMultiReadCount - 1 && sgTSDev < 0.8e9)
+                        continue;
+
+                    tree->Fill();
+                    counter++;
+                    preTS = ts;
+                }
+                preTS = sgMultiReadTS[sgMultiReadCount - 1];
+                sgMultiReadCount = 0;
+
+                // Process a new multi read
+                if (iddev > 1)
+                {
+                    sgCurrentID = boardID;
+                    sgCurrentDev = iddev;
+                    sgMultiReadTS[sgMultiReadCount] = tsTemp;
+                    sgMultiReadCount++;
+                    continue;
+                }
+            }
 
             //  Judge whether time deviation is larger than 1000 ns
-            if ((tsTemp - preTS) < TS_JUDGE_RANGE && (row > 0))
-                continue;
+
             if (fin.eof())
                 break;
+
+            if (row < 5 && tsTemp > 10e9)
+                continue;
+            if ((tsTemp - preTS) < TS_JUDGE_RANGE && (row > 0))
+                continue;
 
             tsid = boardID;
             ts = tsTemp;
@@ -221,6 +276,7 @@ bool BoardT0Manager::InitT0Matching(std::string sFileName)
     fTree->Branch("tsFlag", fTSFlag, Form("tsFlag[%d]/b", NTotalBoards));
 
     // Read Input files
+    fInsideTSidStart.resize(fBoardCount);
     for (int i = 0; i < fBoardCount; i++)
     {
         fInFiles[i] = new TFile(Form("%s/Board%dTS.root", fsROOTOutPath.c_str(), fBoardArray[i]));
@@ -238,6 +294,9 @@ bool BoardT0Manager::InitT0Matching(std::string sFileName)
             return false;
         }
         fInTrees[i]->SetBranchAddress("ts", &fInTS[i]);
+        fInTrees[i]->SetBranchAddress("tsid", &fInTSid[i]);
+        fInTrees[i]->GetEntry(0);
+        fInsideTSidStart[i] = fInTSid[i];
 
         fPreEntry[i] = 0;
         fPreTS[i] = 0;
@@ -351,6 +410,83 @@ bool BoardT0Manager::SaveNextTS()
     fTSid++;
 
     return true;
+}
+
+int BoardT0Manager::MatchByID()
+{
+    std::for_each(fMatchedCounter.begin(), fMatchedCounter.end(), [](int &i)
+                  { i = 0; });
+    for (int boardNo = 0; boardNo < fBoardCount; boardNo++)
+    {
+        fInEntries[boardNo] = fInTrees[boardNo]->GetEntries();
+        fCurrentEntry[boardNo] = 0;
+    }
+    for (int loopCounter = 0; MatchByIDOnce() >= 0; loopCounter++)
+        std::for_each(fMatchedCounter.begin(), fMatchedCounter.end(), [](int &i)
+                      { i++; });
+    return 0;
+}
+
+#include <algorithm>
+int BoardT0Manager::MatchByIDOnce()
+{
+    int loopCounter = 0;
+    for (loopCounter = 0;; loopCounter++)
+    {
+        for (int boardNo = 0; boardNo < fBoardCount; boardNo++)
+        {
+            if (fCurrentEntry[boardNo] >= fInEntries[boardNo])
+                return -1;
+            fInTrees[boardNo]->GetEntry(fCurrentEntry[boardNo]);
+            if (fInTS[boardNo] < 0)
+                return -2;
+        }
+
+        // Find the maximum time stamp id
+        for (int idx = 0; idx < fBoardCount; idx++)
+            fInTSid[idx] -= fInsideTSidStart[idx];
+        auto maxid_idx = std::max_element(fInTSid, fInTSid + fBoardCount);
+        auto maxid = *maxid_idx;
+
+        // Judge whether all time stamp id are equal
+        bool idEqualFlag = 1;
+        for (int boardNo = 0; boardNo < fBoardCount; boardNo++)
+        {
+            if (fInTSid[boardNo] < maxid)
+            {
+                idEqualFlag = 0;
+                fCurrentEntry[boardNo]++;
+            }
+        }
+
+        if (idEqualFlag)
+            break;
+    }
+
+    // Fill trees
+
+    fTSBoardCount = fBoardCount;
+    for (int boardNo = 0; boardNo < fBoardCount; boardNo++)
+    {
+        fTSBoardStat[boardNo] = boardNo;
+        fTS[boardNo] = fInTS[boardNo];
+        fTSFlag[boardNo] = 1;
+        // qDebug() << boardNo << fInTSid[boardNo] << fTS[boardNo] - fTS[0];
+    }
+    // qDebug() << endl;
+    fTree->Fill();
+    fTSid++;
+    for (int boardNo = 0; boardNo < fBoardCount; boardNo++)
+        fCurrentEntry[boardNo]++;
+
+    return loopCounter;
+}
+
+void BoardT0Manager::SetTSidStartVector(int board, std::vector<uint32_t> TSidStart)
+{
+    if (board < 0 || board >= fBoardCount)
+        return;
+    fInsideTSidStart = TSidStart;
 }
 
 bool BoardT0Manager::FindBegining()

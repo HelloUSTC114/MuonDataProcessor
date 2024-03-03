@@ -46,6 +46,11 @@ public:
     bool SaveNextTS();
     std::vector<int> &GetInsideMatchedCounter() { return fMatchedCounter; };
 
+    // Match T0 TS by TS id
+    int MatchByID();
+    int MatchByIDOnce();
+    void SetTSidStartVector(int board, std::vector<uint32_t> TSidStart);
+
 private:
     BoardT0Manager() = default;
 
@@ -72,6 +77,11 @@ private:
     TFile *fInFiles[MAX_BOARD_COUNTS]{0};
     TTree *fInTrees[MAX_BOARD_COUNTS]{0};
     double fInTS[MAX_BOARD_COUNTS];
+    uint32_t fInTSid[MAX_BOARD_COUNTS];
+    std::vector<uint32_t> fInsideTSidStart; // Save TSid for each board
+
+    int fInEntries[MAX_BOARD_COUNTS];    // Entries in each board
+    int fCurrentEntry[MAX_BOARD_COUNTS]; // Current reading entry in each board
 
     // para for match
     int fPreEntry[MAX_BOARD_COUNTS];        // Save previous entry

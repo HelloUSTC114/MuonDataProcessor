@@ -44,6 +44,7 @@ public slots:
 
     // For T0Match task
     void startT0Match(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
+    void startT0Match2(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
 
     // For Data Match Task
     void startBoardMatch();
@@ -126,9 +127,12 @@ private slots:
 
     void on_cbxDefaultMatchFile_stateChanged(int arg1);
 
+    void on_btnStartT0Match_2_clicked();
+
 signals:
     void startAlignRequest(QString sInput, QString sOutput);
     void startT0Request(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
+    void startT0Request2(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir);
     void startBoardMatchRequest();
 
 private:

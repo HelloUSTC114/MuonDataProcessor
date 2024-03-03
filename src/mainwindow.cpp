@@ -67,6 +67,32 @@ void AlignRuning::startT0Match(QVector<int> *boardArray, QString sInputTxtDir, Q
     gT0Manager->CloseT0ROOTFile();
 }
 
+void AlignRuning::startT0Match2(QVector<int> *boardArray, QString sInputTxtDir, QString sOutputROOTDir)
+{
+    QDir dir;
+    std::string txtInPath = sInputTxtDir.toStdString();
+    std::string sT0FinalROOTPath = sOutputROOTDir.toStdString();
+    std::string sROOTOutPath = txtInPath + "/T0TS/";
+    dir.mkdir(QString::fromStdString(sROOTOutPath));
+
+    gT0Manager->ForceClear();
+    gT0Manager->InitBoardArray(std::vector<int>(boardArray->begin(), boardArray->end()), txtInPath, sROOTOutPath);
+    for (int i = 0; i < boardArray->size(); i++)
+    {
+        int entries;
+        double startT0, endT0;
+        auto counter = gT0Manager->ConvertTS(i, entries, startT0, endT0);
+        emit updateT0Row(i, entries, startT0 / 1e9, endT0 / 1e9);
+    }
+    gT0Manager->ConvertAllTS();
+
+    std::string sT0FinalROOTFile = txtInPath + "./TS.root";
+    gT0Manager->InitT0Matching(sT0FinalROOTFile);
+    gT0Manager->MatchByID();
+    emit stopT0Signal(&gT0Manager->GetInsideMatchedCounter());
+    gT0Manager->CloseT0ROOTFile();
+}
+
 void AlignRuning::startBoardMatch()
 {
     auto entries = gDataMatchManager->DoMatch();
@@ -228,6 +254,7 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     fAlignWorker->moveToThread(&fWorkThread);
     connect(this, &Mainwindow::startAlignRequest, fAlignWorker, &AlignRuning::startAlign);
     connect(this, &Mainwindow::startT0Request, fAlignWorker, &AlignRuning::startT0Match);
+    connect(this, &Mainwindow::startT0Request2, fAlignWorker, &AlignRuning::startT0Match2);
     connect(this, &Mainwindow::startBoardMatchRequest, fAlignWorker, &AlignRuning::startBoardMatch);
     connect(fAlignWorker, &AlignRuning::stopAlignSignal, this, &Mainwindow::handle_AlignDone);
     connect(fAlignWorker, &AlignRuning::stopT0Signal, this, &Mainwindow::handle_T0Done);
@@ -827,6 +854,7 @@ void Mainwindow::handle_T0Done(std::vector<int> *matchedEntries)
         ui->tableT0Match->setItem(handle, 6, item);
     }
     ui->btnStartT0Match->setEnabled(1);
+    ui->btnStartT0Match_2->setEnabled(1);
 }
 
 void Mainwindow::handle_BoardMatchDone(int entries)
@@ -1014,6 +1042,7 @@ void Mainwindow::on_btnT0TSOutputPath_clicked()
 void Mainwindow::on_btnStartT0Match_clicked()
 {
     ui->btnStartT0Match->setEnabled(0);
+    ui->btnStartT0Match_2->setEnabled(0);
     emit startT0Request(&fT0BoardArray, sT0InPath, sT0OutPath);
 }
 
@@ -1182,4 +1211,11 @@ void Mainwindow::on_cbxDefaultMatchFile_stateChanged(int arg1)
 
         ui->cbxDefaultMatchFile->setCheckState(Qt::CheckState::Unchecked);
     }
+}
+
+void Mainwindow::on_btnStartT0Match_2_clicked()
+{
+    ui->btnStartT0Match->setEnabled(0);
+    ui->btnStartT0Match_2->setEnabled(0);
+    emit startT0Request2(&fT0BoardArray, sT0InPath, sT0OutPath);
 }
