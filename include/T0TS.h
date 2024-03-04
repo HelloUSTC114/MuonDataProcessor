@@ -41,7 +41,9 @@ public:
 
     bool InitT0Matching(std::string sFileName = "TS.root");
     void ConvertAllTS();
+    void ConvertAllTS(std::map<int, std::string> sBoardMap);
     int ConvertTS(int idx, int &entries, double &startT0, double &endT0);
+    int ConvertTS(int idx, std::map<int, std::string> sBoardMap, int &entries, double &startT0, double &endT0);
     bool FindBegining();
     bool SaveNextTS();
     std::vector<int> &GetInsideMatchedCounter() { return fMatchedCounter; };

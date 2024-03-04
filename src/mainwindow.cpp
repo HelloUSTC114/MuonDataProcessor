@@ -41,16 +41,24 @@ void AlignRuning::startT0Match(QVector<int> *boardArray, QString sInputTxtDir, Q
     std::string sROOTOutPath = txtInPath + "/T0TS/";
     dir.mkdir(QString::fromStdString(sROOTOutPath));
 
+    std::map<int, std::string> sT0FileMap;
+    for (int i = 0; i < boardArray->size(); i++)
+    {
+        std::string sT0File = fMainWin->sT0InList[i].toStdString();
+        boardArray->at(i);
+        sT0FileMap[boardArray->at(i)] = sT0File;
+    }
+
     gT0Manager->ForceClear();
     gT0Manager->InitBoardArray(std::vector<int>(boardArray->begin(), boardArray->end()), txtInPath, sROOTOutPath);
     for (int i = 0; i < boardArray->size(); i++)
     {
         int entries;
         double startT0, endT0;
-        auto counter = gT0Manager->ConvertTS(i, entries, startT0, endT0);
+        auto counter = gT0Manager->ConvertTS(i, sT0FileMap, entries, startT0, endT0);
         emit updateT0Row(i, entries, startT0 / 1e9, endT0 / 1e9);
     }
-    gT0Manager->ConvertAllTS();
+    gT0Manager->ConvertAllTS(sT0FileMap);
 
     std::string sT0FinalROOTFile = txtInPath + "./TS.root";
     gT0Manager->InitT0Matching(sT0FinalROOTFile);
@@ -75,16 +83,23 @@ void AlignRuning::startT0Match2(QVector<int> *boardArray, QString sInputTxtDir, 
     std::string sROOTOutPath = txtInPath + "/T0TS/";
     dir.mkdir(QString::fromStdString(sROOTOutPath));
 
+    std::map<int, std::string> sT0FileMap;
+    for (int i = 0; i < boardArray->size(); i++)
+    {
+        std::string sT0File = fMainWin->sT0InList[i].toStdString();
+        boardArray->at(i);
+        sT0FileMap[boardArray->at(i)] = sT0File;
+    }
     gT0Manager->ForceClear();
     gT0Manager->InitBoardArray(std::vector<int>(boardArray->begin(), boardArray->end()), txtInPath, sROOTOutPath);
     for (int i = 0; i < boardArray->size(); i++)
     {
         int entries;
         double startT0, endT0;
-        auto counter = gT0Manager->ConvertTS(i, entries, startT0, endT0);
+        auto counter = gT0Manager->ConvertTS(i, sT0FileMap, entries, startT0, endT0);
         emit updateT0Row(i, entries, startT0 / 1e9, endT0 / 1e9);
     }
-    gT0Manager->ConvertAllTS();
+    gT0Manager->ConvertAllTS(sT0FileMap);
 
     std::string sT0FinalROOTFile = txtInPath + "./TS.root";
     gT0Manager->InitT0Matching(sT0FinalROOTFile);
@@ -250,7 +265,7 @@ Mainwindow::Mainwindow(QWidget *parent) : QMainWindow(parent),
     ui->btnAlignAll->setEnabled(0);
 
     // Setting Concurrent threads
-    fAlignWorker = new AlignRuning;
+    fAlignWorker = new AlignRuning(this);
     fAlignWorker->moveToThread(&fWorkThread);
     connect(this, &Mainwindow::startAlignRequest, fAlignWorker, &AlignRuning::startAlign);
     connect(this, &Mainwindow::startT0Request, fAlignWorker, &AlignRuning::startT0Match);
@@ -687,12 +702,13 @@ void Mainwindow::on_btnBatchInPath_clicked()
     sBatchInPath = tempString;
     fBatchInFlag = 1;
     ui->lineBatchInPath->setText(sBatchInPath);
+    sBatchOutPath = sBatchInPath + "/../Processed/";
 }
 
 void Mainwindow::on_btnBatchOutPath_clicked()
 {
     if (sBatchOutPath == "")
-        sBatchOutPath = sBatchInPath;
+        sBatchOutPath = sBatchInPath + "/../Processed/";
     auto tempString = QFileDialog::getExistingDirectory(this, "Choose Batch Align Output Path.", sBatchOutPath);
     if (tempString == "")
     {
@@ -932,6 +948,30 @@ void Mainwindow::on_btnGenerateFileList_clicked()
 
 QString ProcessT0OutputName(QString sInput, int &boardNo)
 {
+    // If input file name contains "Board*TS.txt", then it is a T0 file
+    boardNo = -1;
+    if (!sInput.contains("Board") || !sInput.contains("TS.txt"))
+        return "";
+    auto list1 = sInput.split("TS.txt");
+    if (list1.size() != 2)
+        return "";
+    if (list1[0].contains("-"))
+    {
+        auto list2 = list1[0].split("-");
+        auto list3 = list2[0].split("Board");
+        auto sBoardNo = list3[1];
+        boardNo = sBoardNo.toInt();
+        return "Board" + sBoardNo + "TS";
+    }
+    else
+    {
+        auto list2 = list1[0].split("Board");
+        auto sBoardNo = list2[1];
+        boardNo = sBoardNo.toInt();
+        return "Board" + sBoardNo + "TS";
+    }
+
+    // Regular Processing
     auto filename = sInput.mid(0, sInput.size() - 4);
     QString sOutPre = "";
 

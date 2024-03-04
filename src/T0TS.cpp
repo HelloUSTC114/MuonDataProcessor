@@ -57,6 +57,7 @@ namespace T0Process
             tree->GetEntry(entries - 1);
             endT0 = ts;
             // std::cout << std::setprecision(11) << entries << '\t' << startT0 / 1e9 << '\t' << endT0 / 1e9 << std::endl;
+            delete file;
 
             return 0;
         }
@@ -89,6 +90,8 @@ namespace T0Process
         for (int row = 0; fin.is_open() && !fin.eof() && fin.good(); row++)
         {
             fin >> boardID >> iddev >> tsTemp;
+            if (boardID == 0)
+                continue;
             // if iddev > 1, judge whether it is a multi read
             if (iddev > 1)
             {
@@ -235,6 +238,17 @@ void BoardT0Manager::ConvertAllTS()
     }
 }
 
+void BoardT0Manager::ConvertAllTS(std::map<int, std::string> sBoardMap)
+{
+    fAddBoardCloseFlag = 1;
+    int entries;
+    double startT0, endT0;
+    for (int i = 0; i < fBoardArray.size(); i++)
+    {
+        ConvertTS(i, sBoardMap, entries, startT0, endT0);
+    }
+}
+
 int BoardT0Manager::ConvertTS(int idx, int &entries, double &startT0, double &endT0)
 {
     if (idx < 0 || idx >= fBoardArray.size())
@@ -242,6 +256,16 @@ int BoardT0Manager::ConvertTS(int idx, int &entries, double &startT0, double &en
     std::string sTxtFile = fsTXTInPath + "/" + Form("Board%dTS.txt", fBoardArray[idx]);
     std::string sROOTFile = fsROOTOutPath + "/" + Form("Board%dTS.root", fBoardArray[idx]);
     return T0Process::ConvertTS2ROOT(sTxtFile, sROOTFile, entries, startT0, endT0);
+}
+
+int BoardT0Manager::ConvertTS(int idx, std::map<int, std::string> sBoardMap, int &entries, double &startT0, double &endT0)
+{
+    if (idx < 0 || idx >= fBoardArray.size())
+        return 0;
+    std::string sTxtFile = sBoardMap[fBoardArray[idx]];
+    std::string sROOTFile = fsROOTOutPath + "/" + Form("Board%dTS.root", fBoardArray[idx]);
+    auto rtn = T0Process::ConvertTS2ROOT(sTxtFile, sROOTFile, entries, startT0, endT0);
+    return rtn;
 }
 
 bool BoardT0Manager::InitT0Matching(std::string sFileName)

@@ -17,7 +17,7 @@
 
 // User
 #include "AlignManager.h"
-
+class Mainwindow;
 namespace Ui
 {
     class Mainwindow;
@@ -26,6 +26,8 @@ namespace Ui
 class AlignRuning : public QObject
 {
     Q_OBJECT
+public:
+    AlignRuning(Mainwindow *mainWin) : fMainWin(mainWin){};
 signals:
     // For Batch align (Inside board) tasks
     void stopAlignSignal(QString sFileName, int alignedEntry);
@@ -51,6 +53,7 @@ public slots:
 
 private:
     QString fsFileName;
+    Mainwindow *fMainWin;
 };
 
 #define gAlignWin (Mainwindow::Instance())
@@ -58,6 +61,7 @@ class Mainwindow : public QMainWindow
 {
     Q_OBJECT
 
+friend class AlignRuning;
 public:
     ~Mainwindow();
 
